@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Videos">
+    <meta name="theme-color" content="#000000">
+    <title>Video Player</title>
+    <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23007AFF'/><polygon points='38,30 38,70 70,50' fill='white'/></svg>">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        :root {
+            --bg: #000000;
+            --surface: #1c1c1e;
+            --surface-2: #2c2c2e;
+            --text: #ffffff;
+            --text-2: #8e8e93;
+            --accent: #0A84FF;
+            --success: #30D158;
+            --danger: #FF453A;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* ===== LIBRARY VIEW ===== */
+        .library-view {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .library-view.hidden {
+            display: none;
+        }
+
+        .header {
+            padding: 16px 20px 12px;
+            border-bottom: 0.5px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .header-subtitle {
+            font-size: 14px;
+            color: var(--text-2);
+        }
+
+        .pick-button {
+            margin: 16px 20px;
+            padding: 16px;
+            background: var(--accent);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .pick-button:active {
+            opacity: 0.8;
+        }
+
+        .pick-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .library-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 20px 20px;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .section-title {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-2);
+            margin: 16px 0 8px;
+        }
+
+        .video-item {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+
+        .video-item:active {
+            background: var(--surface-2);
+        }
+
+        .video-item-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            word-break: break-word;
+            line-height: 1.3;
+        }
+
+        .video-item-meta {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-2);
+            margin-bottom: 8px;
+        }
+
+        .video-item-progress {
+            height: 4px;
+            background: var(--surface-2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .video-item-progress-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .video-item-progress-fill.complete {
+            background: var(--success);
+        }
+
+        .video-item-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .mini-btn {
+            flex: 1;
+            padding: 8px;
+            background: var(--surface-2);
+            border: none;
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .mini-btn:active {
+            opacity: 0.7;
+        }
+
+        .mini-btn.primary {
+            background: var(--accent);
+        }
+
+        .mini-btn.danger {
+            color: var(--danger);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-2);
+        }
+
+        .empty-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        .empty-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 6px;
+        }
+
+        .empty-desc {
+            font-size: 14px;
+            line-height: 1.5;
+            max-width: 280px;
+            margin: 0 auto;
+        }
+
+        /* ===== PLAYER VIEW ===== */
+        .player-view {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+            background: #000;
+        }
+
+        .player-view.active {
+            display: flex;
+        }
+
+        .player-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: var(--bg);
+            flex-shrink: 0;
+            border-bottom: 0.5px solid var(--border);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--accent);
+            font-size: 16px;
+            cursor: pointer;
+            font-family: inherit;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .player-title {
+            flex: 1;
+            font-size: 15px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .player-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            position: relative;
+            min-height: 0;
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            background: #000;
+        }
+
+        .player-footer {
+            padding: 12px 16px;
+            background: var(--surface);
+            flex-shrink: 0;
+        }
+
+        .save-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-2);
+        }
+
+        .save-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success);
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .resume-banner {
+            background: var(--accent);
+            color: white;
+            padding: 10px 16px;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 500;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background: var(--surface);
+            color: var(--text);
+            padding: 12px 20px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 2000;
+            opacity: 0;
+            transition: all 0.3s;
+            pointer-events: none;
+            border: 0.5px solid var(--border);
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .confirm-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            z-index: 3000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .confirm-overlay.active {
+            display: flex;
+        }
+
+        .confirm-box {
+            background: var(--surface);
+            border-radius: 14px;
+            padding: 20px;
+            max-width: 320px;
+            width: 100%;
+        }
+
+        .confirm-title {
+            font-size: 17px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .confirm-desc {
+            font-size: 14px;
+            color: var(--text-2);
+            margin-bottom: 16px;
+            line-height: 1.4;
+        }
+
+        .confirm-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .confirm-actions button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .btn-cancel {
+            background: var(--surface-2);
+            color: var(--text);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .tip-card {
+            background: rgba(10, 132, 255, 0.1);
+            border: 0.5px solid rgba(10, 132, 255, 0.3);
+            border-radius: 10px;
+            padding: 12px 14px;
+            margin: 0 20px 12px;
+            font-size: 13px;
+            color: var(--text-2);
+            line-height: 1.4;
+        }
+
+        .tip-card strong {
+            color: var(--accent);
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <!-- ===== LIBRARY VIEW ===== -->
+        <div class="library-view" id="libraryView">
+            <div class="header">
+                <div class="header-title">Videos</div>
+                <div class="header-subtitle" id="subtitle">No videos watched yet</div>
+            </div>
+
+            <button class="pick-button" onclick="pickVideo()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="23 7 16 12 23 17 23 7"/>
+                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
+                </svg>
+                Open video
+            </button>
+
+            <div id="tipCard" class="tip-card" style="display:none;">
+                <strong>Tip:</strong> Tap a video below to resume from where you stopped. You'll be asked to pick the file again — the app will match it automatically.
+            </div>
+
+            <div class="library-list" id="libraryList">
+                <div class="empty-state">
+                    <div class="empty-icon">🎬</div>
+                    <div class="empty-title">No videos yet</div>
+                    <div class="empty-desc">Tap "Open video" to pick a video from your Files. The app will remember where you stopped.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== PLAYER VIEW ===== -->
+        <div class="player-view" id="playerView">
+            <div class="player-header">
+                <button class="back-btn" onclick="closeVideo()">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="15 18 9 12 15 6"/>
+                    </svg>
+                    Videos
+                </button>
+                <div class="player-title" id="playerTitle"></div>
+            </div>
+
+            <div id="resumeBanner" style="display:none;" class="resume-banner"></div>
+
+            <div class="player-container">
+                <video id="videoPlayer" controls playsinline preload="metadata" webkit-playsinline>
+                    Your browser does not support video playback.
+                </video>
+            </div>
+
+            <div class="player-footer">
+                <div class="save-indicator">
+                    <span class="save-dot"></span>
+                    <span id="saveStatus">Saving position automatically</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden file input -->
+        <input type="file" id="fileInput" accept="video/*">
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <!-- Confirm dialog -->
+    <div class="confirm-overlay" id="confirmOverlay">
+        <div class="confirm-box">
+            <div class="confirm-title" id="confirmTitle">Remove video?</div>
+            <div class="confirm-desc" id="confirmDesc">This only removes it from this list. Your file stays on your device.</div>
+            <div class="confirm-actions">
+                <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
+                <button class="btn-danger" id="confirmBtn">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        'use strict';
+
+        const STORAGE_KEY = 'videoLibrary_v3';
+        const SAVE_INTERVAL_MS = 2000;
+
+        let library = [];
+        let currentVideo = null;
+        let currentFile = null;
+        let currentObjectURL = null;
+        let saveTimer = null;
+        let pendingResumeId = null;
+
+        const video = document.getElementById('videoPlayer');
+        const fileInput = document.getElementById('fileInput');
+
+        // ========== STORAGE ==========
+        function loadLibrary() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                library = saved ? JSON.parse(saved) : [];
+            } catch (e) {
+                library = [];
+            }
+        }
+
+        function saveLibrary() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
+            } catch (e) {
+                showToast('Storage error');
+            }
+        }
+
+        // Fingerprint = name + size (unique enough for video files)
+        function getFingerprint(file) {
+            return `${file.name}::${file.size}`;
+        }
+
+        function findVideo(fingerprint) {
+            return library.find(v => v.fingerprint === fingerprint);
+        }
+
+        // ========== FILE PICKING ==========
+        function pickVideo() {
+            pendingResumeId = null;
+            fileInput.click();
+        }
+
+        function pickVideoToResume(fingerprint) {
+            pendingResumeId = fingerprint;
+            fileInput.click();
+        }
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const fingerprint = getFingerprint(file);
+
+            // If user was trying to resume a specific video, verify match
+            if (pendingResumeId && fingerprint !== pendingResumeId) {
+                showToast("That's a different file. Please pick the correct one.");
+                pendingResumeId = null;
+                fileInput.value = '';
+                return;
+            }
+
+            openFile(file);
+            fileInput.value = '';
+            pendingResumeId = null;
+        });
+
+        function openFile(file) {
+            currentFile = file;
+            const fingerprint = getFingerprint(file);
+            let entry = findVideo(fingerprint);
+            const isNew = !entry;
+
+            if (isNew) {
+                entry = {
+                    fingerprint,
+                    name: file.name,
+                    size: file.size,
+                    duration: 0,
+                    position: 0,
+                    completed: false,
+                    dateAdded: Date.now(),
+                    lastWatched: Date.now(),
+                    watchCount: 0
+                };
+                library.unshift(entry);
+                saveLibrary();
+            } else {
+                entry.lastWatched = Date.now();
+                saveLibrary();
+            }
+
+            currentVideo = entry;
+
+            // Load video
+            if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
+            currentObjectURL = URL.createObjectURL(file);
+            video.src = currentObjectURL;
+
+            // Switch to player view
+            document.getElementById('libraryView').classList.add('hidden');
+            document.getElementById('playerView').classList.add('active');
+            document.getElementById('playerTitle').textContent = displayName(file.name);
+
+            // Show resume banner
+            const banner = document.getElementById('resumeBanner');
+            if (!isNew && entry.position > 0 && !entry.completed) {
+                banner.textContent = `Resuming from ${formatTime(entry.position)}`;
+                banner.style.display = 'block';
+                setTimeout(() => { banner.style.display = 'none'; }, 3500);
+            } else if (!isNew && entry.completed) {
+                banner.textContent = `You've watched this before — restarting`;
+                banner.style.display = 'block';
+                setTimeout(() => { banner.style.display = 'none'; }, 3500);
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        // ========== VIDEO EVENTS ==========
+        video.addEventListener('loadedmetadata', () => {
+            if (!currentVideo) return;
+            currentVideo.duration = video.duration;
+            saveLibrary();
+
+            // Auto-seek to saved position
+            if (currentVideo.position > 0 && !currentVideo.completed) {
+                const seekTo = Math.min(currentVideo.position, video.duration - 1);
+                if (seekTo > 0) {
+                    video.currentTime = seekTo;
+                }
+            }
+        });
+
+        video.addEventListener('timeupdate', () => {
+            // Update saveStatus once in a while (lightweight)
+            if (currentVideo && video.duration) {
+                const pct = Math.round((video.currentTime / video.duration) * 100);
+                document.getElementById('saveStatus').textContent =
+                    `${formatTime(video.currentTime)} / ${formatTime(video.duration)} • ${pct}%`;
+            }
+        });
+
+        video.addEventListener('play', () => {
+            if (saveTimer) clearInterval(saveTimer);
+            saveTimer = setInterval(savePosition, SAVE_INTERVAL_MS);
+        });
+
+        video.addEventListener('pause', () => {
+            savePosition();
+            if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+        });
+
+        video.addEventListener('ended', () => {
+            if (!currentVideo) return;
+            currentVideo.position = currentVideo.duration;
+            currentVideo.completed = true;
+            currentVideo.watchCount = (currentVideo.watchCount || 0) + 1;
+            saveLibrary();
+            if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+        });
+
+        function savePosition() {
+            if (!currentVideo || !video.duration) return;
+            currentVideo.position = video.currentTime;
+            currentVideo.lastWatched = Date.now();
+            if (video.currentTime >= video.duration - 1) {
+                currentVideo.completed = true;
+            } else {
+                currentVideo.completed = false;
+            }
+            saveLibrary();
+        }
+
+        // Save when app goes to background / page is hidden
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') {
+                savePosition();
+            }
+        });
+
+        window.addEventListener('pagehide', savePosition);
+        window.addEventListener('beforeunload', savePosition);
+
+        // ========== PLAYER CONTROLS ==========
+        function closeVideo() {
+            savePosition();
+            video.pause();
+            video.removeAttribute('src');
+            video.load();
+            if (currentObjectURL) {
+                URL.revokeObjectURL(currentObjectURL);
+                currentObjectURL = null;
+            }
+            currentFile = null;
+            currentVideo = null;
+            if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+
+            document.getElementById('playerView').classList.remove('active');
+            document.getElementById('libraryView').classList.remove('hidden');
+            renderLibrary();
+        }
+
+        // ========== LIBRARY RENDERING ==========
+        function renderLibrary() {
+            const list = document.getElementById('libraryList');
+            const subtitle = document.getElementById('subtitle');
+            const tipCard = document.getElementById('tipCard');
+
+            const count = library.length;
+            subtitle.textContent = count === 0
+                ? 'No videos watched yet'
+                : `${count} video${count !== 1 ? 's' : ''} tracked`;
+
+            tipCard.style.display = count > 0 ? 'block' : 'none';
+
+            if (count === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎬</div>
+                        <div class="empty-title">No videos yet</div>
+                        <div class="empty-desc">Tap "Open video" to pick a video from your Files. The app will remember where you stopped.</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by most recently watched
+            const sorted = [...library].sort((a, b) => b.lastWatched - a.lastWatched);
+
+            const inProgress = sorted.filter(v => !v.completed && v.position > 0);
+            const notStarted = sorted.filter(v => v.position === 0);
+            const finished = sorted.filter(v => v.completed);
+
+            let html = '';
+            if (inProgress.length > 0) {
+                html += `<div class="section-title">Continue watching</div>`;
+                html += inProgress.map(videoItemHtml).join('');
+            }
+            if (notStarted.length > 0) {
+                html += `<div class="section-title">Not started</div>`;
+                html += notStarted.map(videoItemHtml).join('');
+            }
+            if (finished.length > 0) {
+                html += `<div class="section-title">Finished</div>`;
+                html += finished.map(videoItemHtml).join('');
+            }
+
+            list.innerHTML = html;
+        }
+
+        function videoItemHtml(v) {
+            const pct = v.duration > 0 ? Math.round((v.position / v.duration) * 100) : 0;
+            const complete = v.completed;
+            const remaining = v.duration - v.position;
+
+            let statusText;
+            if (complete) {
+                statusText = '✓ Finished';
+            } else if (v.position === 0) {
+                statusText = v.duration ? formatTime(v.duration) : 'Not started';
+            } else {
+                statusText = `${formatTime(v.position)} / ${formatTime(v.duration)}`;
+            }
+
+            const rightText = complete ? '100%' : (v.position > 0 ? `${pct}% • ${formatTime(remaining)} left` : '');
+
+            return `
+                <div class="video-item">
+                    <div class="video-item-title">${escapeHtml(displayName(v.name))}</div>
+                    <div class="video-item-meta">
+                        <span>${statusText}</span>
+                        <span>${rightText}</span>
+                    </div>
+                    <div class="video-item-progress">
+                        <div class="video-item-progress-fill ${complete ? 'complete' : ''}" style="width: ${pct}%"></div>
+                    </div>
+                    <div class="video-item-actions">
+                        <button class="mini-btn primary" onclick="pickVideoToResume('${escapeAttr(v.fingerprint)}')">
+                            ${complete ? 'Watch again' : v.position > 0 ? `Resume at ${formatTime(v.position)}` : 'Start watching'}
+                        </button>
+                        ${v.position > 0 ? `<button class="mini-btn" onclick="resetVideo('${escapeAttr(v.fingerprint)}')">Reset</button>` : ''}
+                        <button class="mini-btn danger" onclick="removeVideo('${escapeAttr(v.fingerprint)}')">Remove</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function resetVideo(fingerprint) {
+            const v = findVideo(fingerprint);
+            if (!v) return;
+            v.position = 0;
+            v.completed = false;
+            saveLibrary();
+            renderLibrary();
+            showToast('Progress reset');
+        }
+
+        function removeVideo(fingerprint) {
+            const v = findVideo(fingerprint);
+            if (!v) return;
+            showConfirm('Remove from list?', `"${displayName(v.name)}" will be removed from this list. Your video file is not deleted.`, () => {
+                library = library.filter(x => x.fingerprint !== fingerprint);
+                saveLibrary();
+                renderLibrary();
+                showToast('Removed');
+            });
+        }
+
+        // ========== HELPERS ==========
+        function displayName(filename) {
+            // Strip extension for display
+            return filename.replace(/\.[^/.]+$/, '');
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || !isFinite(seconds)) return '0:00';
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = Math.floor(seconds % 60);
+            if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+            return `${m}:${String(s).padStart(2, '0')}`;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function escapeAttr(text) {
+            return String(text).replace(/'/g, "\\'");
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 2500);
+        }
+
+        function showConfirm(title, desc, callback) {
+            document.getElementById('confirmTitle').textContent = title;
+            document.getElementById('confirmDesc').textContent = desc;
+            const btn = document.getElementById('confirmBtn');
+            btn.onclick = () => { callback(); closeConfirm(); };
+            document.getElementById('confirmOverlay').classList.add('active');
+        }
+
+        function closeConfirm() {
+            document.getElementById('confirmOverlay').classList.remove('active');
+        }
+
+        document.getElementById('confirmOverlay').addEventListener('click', (e) => {
+            if (e.target.id === 'confirmOverlay') closeConfirm();
+        });
+
+        // ========== INIT ==========
+        loadLibrary();
+        renderLibrary();
+    </script>
+</body>
+</html>
