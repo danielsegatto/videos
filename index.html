@@ -10,463 +10,141 @@
     <title>Video Player</title>
     <link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23007AFF'/><polygon points='38,30 38,70 70,50' fill='white'/></svg>">
     <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            -webkit-tap-highlight-color: transparent;
-        }
-
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
         :root {
-            --bg: #000000;
-            --surface: #1c1c1e;
-            --surface-2: #2c2c2e;
-            --text: #ffffff;
-            --text-2: #8e8e93;
-            --accent: #0A84FF;
-            --success: #30D158;
-            --danger: #FF453A;
-            --border: rgba(255, 255, 255, 0.1);
+            --bg: #000; --surface: #1c1c1e; --surface-2: #2c2c2e; --surface-3: #3a3a3c;
+            --text: #fff; --text-2: #8e8e93; --text-3: #636366;
+            --accent: #0A84FF; --accent-light: rgba(10,132,255,0.15);
+            --success: #30D158; --danger: #FF453A; --warning: #FF9F0A;
+            --border: rgba(255,255,255,0.08);
         }
-
-        html, body {
-            height: 100%;
-            overflow: hidden;
-        }
-
+        html, body { height: 100%; overflow: hidden; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            -webkit-font-smoothing: antialiased;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased;
+            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
         }
+        .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: 700px; margin: 0 auto; }
 
-        .app {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            height: 100dvh;
-            max-width: 700px;
-            margin: 0 auto;
-        }
+        .library-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+        .library-view.hidden { display: none; }
+        .header { padding: 16px 20px 12px; border-bottom: 0.5px solid var(--border); flex-shrink: 0; }
+        .header-title { font-size: 28px; font-weight: 700; margin-bottom: 4px; }
+        .header-subtitle { font-size: 13px; color: var(--text-2); }
+        .storage-bar { height: 3px; background: var(--surface-2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+        .storage-fill { height: 100%; background: var(--accent); transition: width 0.4s; }
+        .storage-fill.warn { background: var(--warning); }
+        .storage-fill.danger { background: var(--danger); }
 
-        /* ===== LIBRARY VIEW ===== */
-        .library-view {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
+        .toolbar { display: flex; gap: 8px; padding: 12px 16px; flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
+        .toolbar button {
+            flex: 1; padding: 12px 8px; background: var(--surface);
+            border: none; border-radius: 10px; color: var(--text);
+            font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;
+            display: flex; align-items: center; justify-content: center; gap: 6px;
         }
+        .toolbar button.primary { background: var(--accent); }
+        .toolbar button:active { opacity: 0.75; }
+        .toolbar svg { width: 16px; height: 16px; }
 
-        .library-view.hidden {
-            display: none;
-        }
+        .library-list { flex: 1; overflow-y: auto; padding: 8px 16px 20px; -webkit-overflow-scrolling: touch; }
+        .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-2); margin: 14px 4px 8px; }
+        .video-item { background: var(--surface); border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+        .video-item:active { background: var(--surface-2); }
+        .video-item-main { display: flex; align-items: center; gap: 12px; }
+        .play-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .play-icon svg { width: 18px; height: 18px; fill: var(--accent); margin-left: 2px; }
+        .play-icon.complete { background: rgba(48,209,88,0.15); }
+        .play-icon.complete svg { fill: var(--success); }
+        .video-item-info { flex: 1; min-width: 0; }
+        .video-item-title { font-size: 15px; font-weight: 500; line-height: 1.3; margin-bottom: 4px; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .video-item-meta { font-size: 12px; color: var(--text-2); }
+        .video-item-progress { height: 3px; background: var(--surface-2); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        .video-item-progress-fill { height: 100%; background: var(--accent); }
+        .video-item-progress-fill.complete { background: var(--success); }
+        .video-item-actions { display: flex; gap: 6px; margin-top: 10px; }
+        .mini-btn { padding: 6px 10px; background: var(--surface-2); border: none; border-radius: 7px; color: var(--text-2); font-size: 11px; font-weight: 500; cursor: pointer; font-family: inherit; }
+        .mini-btn:active { opacity: 0.7; }
+        .mini-btn.danger { color: var(--danger); }
 
-        .header {
-            padding: 16px 20px 12px;
-            border-bottom: 0.5px solid var(--border);
-            flex-shrink: 0;
-        }
+        .empty-state { text-align: center; padding: 60px 20px; color: var(--text-2); }
+        .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.3; }
+        .empty-title { font-size: 17px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+        .empty-desc { font-size: 14px; line-height: 1.5; max-width: 280px; margin: 0 auto; }
 
-        .header-title {
-            font-size: 28px;
-            font-weight: 700;
-            margin-bottom: 4px;
-        }
+        .player-view { display: none; flex-direction: column; height: 100%; background: #000; }
+        .player-view.active { display: flex; }
+        .player-header { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--bg); flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
+        .back-btn { background: none; border: none; color: var(--accent); font-size: 16px; cursor: pointer; font-family: inherit; padding: 4px 8px; display: flex; align-items: center; gap: 4px; }
+        .player-title { flex: 1; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .player-container { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; min-height: 0; }
+        video { width: 100%; height: 100%; max-height: 100%; object-fit: contain; background: #000; }
+        .player-footer { padding: 10px 16px; background: var(--surface); flex-shrink: 0; }
+        .save-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); }
+        .save-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+        .resume-banner { background: var(--accent); color: white; padding: 10px 16px; font-size: 13px; text-align: center; font-weight: 500; animation: slideDown 0.3s ease-out; }
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-        .header-subtitle {
-            font-size: 14px;
-            color: var(--text-2);
-        }
+        .import-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 2500; align-items: center; justify-content: center; padding: 20px; }
+        .import-overlay.active { display: flex; }
+        .import-box { background: var(--surface); border-radius: 14px; padding: 24px; max-width: 320px; width: 100%; text-align: center; }
+        .import-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+        .import-file { font-size: 13px; color: var(--text-2); margin-bottom: 16px; word-break: break-word; }
+        .import-progress { height: 6px; background: var(--surface-2); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+        .import-progress-fill { height: 100%; background: var(--accent); transition: width 0.1s; }
+        .import-status { font-size: 13px; color: var(--text-2); }
 
-        .pick-button {
-            margin: 16px 20px;
-            padding: 16px;
-            background: var(--accent);
-            border: none;
-            border-radius: 14px;
-            color: white;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: inherit;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            flex-shrink: 0;
-        }
+        .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(100px); background: var(--surface); color: var(--text); padding: 12px 20px; border-radius: 24px; font-size: 14px; font-weight: 500; z-index: 2000; opacity: 0; transition: all 0.3s; pointer-events: none; border: 0.5px solid var(--border); max-width: 85%; text-align: center; }
+        .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
-        .pick-button:active {
-            opacity: 0.8;
-        }
+        .dialog-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 3000; align-items: center; justify-content: center; padding: 20px; }
+        .dialog-overlay.active { display: flex; }
+        .dialog-box { background: var(--surface); border-radius: 14px; padding: 20px; max-width: 340px; width: 100%; }
+        .dialog-title { font-size: 17px; font-weight: 600; margin-bottom: 8px; }
+        .dialog-desc { font-size: 14px; color: var(--text-2); margin-bottom: 16px; line-height: 1.45; }
+        .dialog-actions { display: flex; gap: 8px; }
+        .dialog-actions button { flex: 1; padding: 12px; border-radius: 10px; border: none; font-size: 15px; font-weight: 500; cursor: pointer; font-family: inherit; }
+        .btn-cancel { background: var(--surface-2); color: var(--text); }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-primary-dialog { background: var(--accent); color: white; }
 
-        .pick-button svg {
-            width: 20px;
-            height: 20px;
-        }
+        input[type="file"] { display: none; }
 
-        .library-list {
-            flex: 1;
-            overflow-y: auto;
-            padding: 0 20px 20px;
-            -webkit-overflow-scrolling: touch;
-        }
-
-        .section-title {
-            font-size: 13px;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--text-2);
-            margin: 16px 0 8px;
-        }
-
-        .video-item {
-            background: var(--surface);
-            border-radius: 12px;
-            padding: 14px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            transition: background 0.15s;
-        }
-
-        .video-item:active {
-            background: var(--surface-2);
-        }
-
-        .video-item-title {
-            font-size: 15px;
-            font-weight: 500;
-            margin-bottom: 8px;
-            word-break: break-word;
-            line-height: 1.3;
-        }
-
-        .video-item-meta {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: var(--text-2);
-            margin-bottom: 8px;
-        }
-
-        .video-item-progress {
-            height: 4px;
-            background: var(--surface-2);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .video-item-progress-fill {
-            height: 100%;
-            background: var(--accent);
-            transition: width 0.3s;
-        }
-
-        .video-item-progress-fill.complete {
-            background: var(--success);
-        }
-
-        .video-item-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .mini-btn {
-            flex: 1;
-            padding: 8px;
-            background: var(--surface-2);
-            border: none;
-            border-radius: 8px;
-            color: var(--text);
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .mini-btn:active {
-            opacity: 0.7;
-        }
-
-        .mini-btn.primary {
-            background: var(--accent);
-        }
-
-        .mini-btn.danger {
-            color: var(--danger);
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-2);
-        }
-
-        .empty-icon {
-            font-size: 56px;
-            margin-bottom: 16px;
-            opacity: 0.3;
-        }
-
-        .empty-title {
-            font-size: 17px;
-            font-weight: 600;
-            color: var(--text);
-            margin-bottom: 6px;
-        }
-
-        .empty-desc {
-            font-size: 14px;
-            line-height: 1.5;
-            max-width: 280px;
-            margin: 0 auto;
-        }
-
-        /* ===== PLAYER VIEW ===== */
-        .player-view {
-            display: none;
-            flex-direction: column;
-            height: 100%;
-            background: #000;
-        }
-
-        .player-view.active {
-            display: flex;
-        }
-
-        .player-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
-            background: var(--bg);
-            flex-shrink: 0;
-            border-bottom: 0.5px solid var(--border);
-        }
-
-        .back-btn {
-            background: none;
-            border: none;
-            color: var(--accent);
-            font-size: 16px;
-            cursor: pointer;
-            font-family: inherit;
-            padding: 4px 8px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        .player-title {
-            flex: 1;
-            font-size: 15px;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .player-container {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-            position: relative;
-            min-height: 0;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            background: #000;
-        }
-
-        .player-footer {
-            padding: 12px 16px;
-            background: var(--surface);
-            flex-shrink: 0;
-        }
-
-        .save-indicator {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 12px;
-            color: var(--text-2);
-        }
-
-        .save-dot {
-            width: 8px;
-            height: 8px;
-            background: var(--success);
-            border-radius: 50%;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.3; }
-        }
-
-        .resume-banner {
-            background: var(--accent);
-            color: white;
-            padding: 10px 16px;
-            font-size: 13px;
-            text-align: center;
-            font-weight: 500;
-            animation: slideDown 0.3s ease-out;
-        }
-
-        @keyframes slideDown {
-            from { transform: translateY(-100%); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: var(--surface);
-            color: var(--text);
-            padding: 12px 20px;
-            border-radius: 24px;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 2000;
-            opacity: 0;
-            transition: all 0.3s;
-            pointer-events: none;
-            border: 0.5px solid var(--border);
-        }
-
-        .toast.show {
-            opacity: 1;
-            transform: translateX(-50%) translateY(0);
-        }
-
-        .confirm-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.7);
-            z-index: 3000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .confirm-overlay.active {
-            display: flex;
-        }
-
-        .confirm-box {
-            background: var(--surface);
-            border-radius: 14px;
-            padding: 20px;
-            max-width: 320px;
-            width: 100%;
-        }
-
-        .confirm-title {
-            font-size: 17px;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-
-        .confirm-desc {
-            font-size: 14px;
-            color: var(--text-2);
-            margin-bottom: 16px;
-            line-height: 1.4;
-        }
-
-        .confirm-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .confirm-actions button {
-            flex: 1;
-            padding: 12px;
-            border-radius: 10px;
-            border: none;
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            font-family: inherit;
-        }
-
-        .btn-cancel {
-            background: var(--surface-2);
-            color: var(--text);
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-
-        input[type="file"] {
-            display: none;
-        }
-
-        .tip-card {
-            background: rgba(10, 132, 255, 0.1);
-            border: 0.5px solid rgba(10, 132, 255, 0.3);
-            border-radius: 10px;
-            padding: 12px 14px;
-            margin: 0 20px 12px;
-            font-size: 13px;
-            color: var(--text-2);
-            line-height: 1.4;
-        }
-
-        .tip-card strong {
-            color: var(--accent);
-        }
+        .info-banner { background: var(--accent-light); border: 0.5px solid rgba(10,132,255,0.3); border-radius: 10px; padding: 12px 14px; margin: 12px 16px 0; font-size: 12px; color: var(--text); line-height: 1.45; }
+        .info-banner strong { color: var(--accent); }
+        .info-banner.warn { background: rgba(255,159,10,0.1); border-color: rgba(255,159,10,0.3); }
+        .info-banner.warn strong { color: var(--warning); }
     </style>
 </head>
 <body>
     <div class="app">
-        <!-- ===== LIBRARY VIEW ===== -->
         <div class="library-view" id="libraryView">
             <div class="header">
                 <div class="header-title">Videos</div>
-                <div class="header-subtitle" id="subtitle">No videos watched yet</div>
+                <div class="header-subtitle" id="subtitle">No videos yet</div>
+                <div class="storage-bar"><div class="storage-fill" id="storageFill" style="width: 0%"></div></div>
             </div>
 
-            <button class="pick-button" onclick="pickVideo()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="23 7 16 12 23 17 23 7"/>
-                    <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
-                </svg>
-                Open video
-            </button>
-
-            <div id="tipCard" class="tip-card" style="display:none;">
-                <strong>Tip:</strong> Tap a video below to resume from where you stopped. You'll be asked to pick the file again — the app will match it automatically.
+            <div class="toolbar">
+                <button class="primary" onclick="importVideos()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 5v14M5 12h14"/>
+                    </svg>
+                    Import videos
+                </button>
+                <button onclick="requestPersistentStorage()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    </svg>
+                    Protect
+                </button>
             </div>
 
-            <div class="library-list" id="libraryList">
-                <div class="empty-state">
-                    <div class="empty-icon">🎬</div>
-                    <div class="empty-title">No videos yet</div>
-                    <div class="empty-desc">Tap "Open video" to pick a video from your Files. The app will remember where you stopped.</div>
-                </div>
-            </div>
+            <div id="infoBanner"></div>
+            <div class="library-list" id="libraryList"></div>
         </div>
 
-        <!-- ===== PLAYER VIEW ===== -->
         <div class="player-view" id="playerView">
             <div class="player-header">
                 <button class="back-btn" onclick="closeVideo()">
@@ -477,15 +155,10 @@
                 </button>
                 <div class="player-title" id="playerTitle"></div>
             </div>
-
             <div id="resumeBanner" style="display:none;" class="resume-banner"></div>
-
             <div class="player-container">
-                <video id="videoPlayer" controls playsinline preload="metadata" webkit-playsinline>
-                    Your browser does not support video playback.
-                </video>
+                <video id="videoPlayer" controls playsinline preload="metadata" webkit-playsinline></video>
             </div>
-
             <div class="player-footer">
                 <div class="save-indicator">
                     <span class="save-dot"></span>
@@ -494,142 +167,214 @@
             </div>
         </div>
 
-        <!-- Hidden file input -->
-        <input type="file" id="fileInput" accept="video/*">
+        <input type="file" id="fileInput" accept="video/*" multiple>
+    </div>
+
+    <div class="import-overlay" id="importOverlay">
+        <div class="import-box">
+            <div class="import-title" id="importTitle">Importing video...</div>
+            <div class="import-file" id="importFile"></div>
+            <div class="import-progress"><div class="import-progress-fill" id="importFill" style="width: 0%"></div></div>
+            <div class="import-status" id="importStatus">Preparing...</div>
+        </div>
     </div>
 
     <div class="toast" id="toast"></div>
 
-    <!-- Confirm dialog -->
-    <div class="confirm-overlay" id="confirmOverlay">
-        <div class="confirm-box">
-            <div class="confirm-title" id="confirmTitle">Remove video?</div>
-            <div class="confirm-desc" id="confirmDesc">This only removes it from this list. Your file stays on your device.</div>
-            <div class="confirm-actions">
-                <button class="btn-cancel" onclick="closeConfirm()">Cancel</button>
-                <button class="btn-danger" id="confirmBtn">Remove</button>
-            </div>
+    <div class="dialog-overlay" id="dialogOverlay">
+        <div class="dialog-box">
+            <div class="dialog-title" id="dialogTitle"></div>
+            <div class="dialog-desc" id="dialogDesc"></div>
+            <div class="dialog-actions" id="dialogActions"></div>
         </div>
     </div>
 
     <script>
         'use strict';
-
-        const STORAGE_KEY = 'videoLibrary_v3';
+        const DB_NAME = 'VideoPlayerDB';
+        const DB_VERSION = 1;
+        const STORE_VIDEOS = 'videos';
+        const STORE_META = 'meta';
         const SAVE_INTERVAL_MS = 2000;
 
-        let library = [];
+        let db = null;
         let currentVideo = null;
-        let currentFile = null;
         let currentObjectURL = null;
         let saveTimer = null;
-        let pendingResumeId = null;
 
         const video = document.getElementById('videoPlayer');
         const fileInput = document.getElementById('fileInput');
 
-        // ========== STORAGE ==========
-        function loadLibrary() {
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const req = indexedDB.open(DB_NAME, DB_VERSION);
+                req.onerror = () => reject(req.error);
+                req.onsuccess = () => resolve(req.result);
+                req.onupgradeneeded = (e) => {
+                    const database = e.target.result;
+                    if (!database.objectStoreNames.contains(STORE_VIDEOS)) {
+                        database.createObjectStore(STORE_VIDEOS, { keyPath: 'id' });
+                    }
+                    if (!database.objectStoreNames.contains(STORE_META)) {
+                        database.createObjectStore(STORE_META, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        function dbGet(store, id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(store, 'readonly');
+                const req = tx.objectStore(store).get(id);
+                req.onsuccess = () => resolve(req.result);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function dbPut(store, value) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(store, 'readwrite');
+                const req = tx.objectStore(store).put(value);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function dbDelete(store, id) {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(store, 'readwrite');
+                const req = tx.objectStore(store).delete(id);
+                req.onsuccess = () => resolve();
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        function dbGetAllMeta() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_META, 'readonly');
+                const req = tx.objectStore(STORE_META).getAll();
+                req.onsuccess = () => resolve(req.result || []);
+                req.onerror = () => reject(req.error);
+            });
+        }
+
+        async function updateStorageInfo() {
+            if (!navigator.storage || !navigator.storage.estimate) return null;
             try {
-                const saved = localStorage.getItem(STORAGE_KEY);
-                library = saved ? JSON.parse(saved) : [];
-            } catch (e) {
-                library = [];
-            }
+                const est = await navigator.storage.estimate();
+                const used = est.usage || 0;
+                const quota = est.quota || 0;
+                const pct = quota > 0 ? (used / quota) * 100 : 0;
+                const fill = document.getElementById('storageFill');
+                fill.style.width = Math.min(100, pct) + '%';
+                fill.className = 'storage-fill' + (pct > 85 ? ' danger' : pct > 65 ? ' warn' : '');
+                return { used, quota, pct };
+            } catch (e) { return null; }
         }
 
-        function saveLibrary() {
-            try {
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(library));
-            } catch (e) {
-                showToast('Storage error');
-            }
-        }
-
-        // Fingerprint = name + size (unique enough for video files)
-        function getFingerprint(file) {
-            return `${file.name}::${file.size}`;
-        }
-
-        function findVideo(fingerprint) {
-            return library.find(v => v.fingerprint === fingerprint);
-        }
-
-        // ========== FILE PICKING ==========
-        function pickVideo() {
-            pendingResumeId = null;
-            fileInput.click();
-        }
-
-        function pickVideoToResume(fingerprint) {
-            pendingResumeId = fingerprint;
-            fileInput.click();
-        }
-
-        fileInput.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const fingerprint = getFingerprint(file);
-
-            // If user was trying to resume a specific video, verify match
-            if (pendingResumeId && fingerprint !== pendingResumeId) {
-                showToast("That's a different file. Please pick the correct one.");
-                pendingResumeId = null;
-                fileInput.value = '';
+        async function requestPersistentStorage() {
+            if (!navigator.storage || !navigator.storage.persist) {
+                showToast('Not supported on this device');
                 return;
             }
+            try {
+                const already = await navigator.storage.persisted();
+                if (already) {
+                    showDialog('Storage protected', 'Your videos are protected from automatic cleanup.', [{ text: 'OK', type: 'primary' }]);
+                    return;
+                }
+                const granted = await navigator.storage.persist();
+                if (granted) {
+                    showToast('Storage protected');
+                } else {
+                    showDialog('Add to Home Screen first',
+                        'To protect your videos from being cleared by iOS, tap the Share button in Safari and choose "Add to Home Screen". That tells iOS to keep your data safe.',
+                        [{ text: 'OK', type: 'primary' }]);
+                }
+            } catch (e) { showToast('Storage error'); }
+        }
 
-            openFile(file);
+        function importVideos() { fileInput.click(); }
+
+        fileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
             fileInput.value = '';
-            pendingResumeId = null;
-        });
 
-        function openFile(file) {
-            currentFile = file;
-            const fingerprint = getFingerprint(file);
-            let entry = findVideo(fingerprint);
-            const isNew = !entry;
+            const overlay = document.getElementById('importOverlay');
+            overlay.classList.add('active');
 
-            if (isNew) {
-                entry = {
-                    fingerprint,
-                    name: file.name,
-                    size: file.size,
-                    duration: 0,
-                    position: 0,
-                    completed: false,
-                    dateAdded: Date.now(),
-                    lastWatched: Date.now(),
-                    watchCount: 0
-                };
-                library.unshift(entry);
-                saveLibrary();
-            } else {
-                entry.lastWatched = Date.now();
-                saveLibrary();
+            let imported = 0, skipped = 0, failed = 0;
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                document.getElementById('importTitle').textContent = `Importing ${i + 1} of ${files.length}`;
+                document.getElementById('importFile').textContent = file.name;
+                document.getElementById('importFill').style.width = '0%';
+                document.getElementById('importStatus').textContent = `${formatBytes(file.size)} — reading file...`;
+
+                try {
+                    const id = `${file.name}::${file.size}::${file.lastModified || 0}`;
+                    const existing = await dbGet(STORE_META, id);
+                    if (existing) { skipped++; continue; }
+
+                    document.getElementById('importStatus').textContent = `${formatBytes(file.size)} — saving to app...`;
+                    document.getElementById('importFill').style.width = '50%';
+
+                    await dbPut(STORE_VIDEOS, { id, blob: file });
+
+                    const meta = {
+                        id, name: file.name, size: file.size, type: file.type,
+                        duration: 0, position: 0, completed: false,
+                        dateAdded: Date.now(), lastWatched: 0, watchCount: 0
+                    };
+                    await dbPut(STORE_META, meta);
+                    document.getElementById('importFill').style.width = '100%';
+                    imported++;
+                } catch (err) {
+                    console.error('Import error:', err);
+                    failed++;
+                    if (err.name === 'QuotaExceededError') {
+                        showToast('Storage full — delete some videos');
+                        break;
+                    }
+                }
             }
 
-            currentVideo = entry;
+            overlay.classList.remove('active');
 
-            // Load video
+            let msg = '';
+            if (imported) msg += `${imported} imported`;
+            if (skipped) msg += (msg ? ', ' : '') + `${skipped} already in library`;
+            if (failed) msg += (msg ? ', ' : '') + `${failed} failed`;
+            if (msg) showToast(msg);
+
+            await renderLibrary();
+            await updateStorageInfo();
+        });
+
+        async function playVideo(id) {
+            const meta = await dbGet(STORE_META, id);
+            if (!meta) { showToast('Video not found'); return; }
+            const record = await dbGet(STORE_VIDEOS, id);
+            if (!record || !record.blob) { showToast('Video file missing'); return; }
+
+            currentVideo = meta;
             if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
-            currentObjectURL = URL.createObjectURL(file);
+            currentObjectURL = URL.createObjectURL(record.blob);
             video.src = currentObjectURL;
 
-            // Switch to player view
             document.getElementById('libraryView').classList.add('hidden');
             document.getElementById('playerView').classList.add('active');
-            document.getElementById('playerTitle').textContent = displayName(file.name);
+            document.getElementById('playerTitle').textContent = displayName(meta.name);
 
-            // Show resume banner
             const banner = document.getElementById('resumeBanner');
-            if (!isNew && entry.position > 0 && !entry.completed) {
-                banner.textContent = `Resuming from ${formatTime(entry.position)}`;
+            if (meta.position > 0 && !meta.completed) {
+                banner.textContent = `Resuming from ${formatTime(meta.position)}`;
                 banner.style.display = 'block';
                 setTimeout(() => { banner.style.display = 'none'; }, 3500);
-            } else if (!isNew && entry.completed) {
-                banner.textContent = `You've watched this before — restarting`;
+            } else if (meta.completed) {
+                banner.textContent = `Already finished — restarting`;
                 banner.style.display = 'block';
                 setTimeout(() => { banner.style.display = 'none'; }, 3500);
             } else {
@@ -637,23 +382,19 @@
             }
         }
 
-        // ========== VIDEO EVENTS ==========
-        video.addEventListener('loadedmetadata', () => {
+        video.addEventListener('loadedmetadata', async () => {
             if (!currentVideo) return;
             currentVideo.duration = video.duration;
-            saveLibrary();
-
-            // Auto-seek to saved position
+            await dbPut(STORE_META, currentVideo);
             if (currentVideo.position > 0 && !currentVideo.completed) {
                 const seekTo = Math.min(currentVideo.position, video.duration - 1);
-                if (seekTo > 0) {
-                    video.currentTime = seekTo;
-                }
+                if (seekTo > 0) video.currentTime = seekTo;
+            } else if (currentVideo.completed) {
+                video.currentTime = 0;
             }
         });
 
         video.addEventListener('timeupdate', () => {
-            // Update saveStatus once in a while (lightweight)
             if (currentVideo && video.duration) {
                 const pct = Math.round((video.currentTime / video.duration) * 100);
                 document.getElementById('saveStatus').textContent =
@@ -671,186 +412,161 @@
             if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
         });
 
-        video.addEventListener('ended', () => {
+        video.addEventListener('ended', async () => {
             if (!currentVideo) return;
             currentVideo.position = currentVideo.duration;
             currentVideo.completed = true;
             currentVideo.watchCount = (currentVideo.watchCount || 0) + 1;
-            saveLibrary();
+            currentVideo.lastWatched = Date.now();
+            await dbPut(STORE_META, currentVideo);
             if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
         });
 
-        function savePosition() {
+        async function savePosition() {
             if (!currentVideo || !video.duration) return;
             currentVideo.position = video.currentTime;
             currentVideo.lastWatched = Date.now();
-            if (video.currentTime >= video.duration - 1) {
-                currentVideo.completed = true;
-            } else {
-                currentVideo.completed = false;
-            }
-            saveLibrary();
+            currentVideo.completed = video.currentTime >= video.duration - 1;
+            try { await dbPut(STORE_META, currentVideo); } catch (e) {}
         }
 
-        // Save when app goes to background / page is hidden
         document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') {
-                savePosition();
-            }
+            if (document.visibilityState === 'hidden') savePosition();
         });
-
         window.addEventListener('pagehide', savePosition);
         window.addEventListener('beforeunload', savePosition);
 
-        // ========== PLAYER CONTROLS ==========
-        function closeVideo() {
-            savePosition();
+        async function closeVideo() {
+            await savePosition();
             video.pause();
             video.removeAttribute('src');
             video.load();
-            if (currentObjectURL) {
-                URL.revokeObjectURL(currentObjectURL);
-                currentObjectURL = null;
-            }
-            currentFile = null;
+            if (currentObjectURL) { URL.revokeObjectURL(currentObjectURL); currentObjectURL = null; }
             currentVideo = null;
             if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
-
             document.getElementById('playerView').classList.remove('active');
             document.getElementById('libraryView').classList.remove('hidden');
-            renderLibrary();
+            await renderLibrary();
         }
 
-        // ========== LIBRARY RENDERING ==========
-        function renderLibrary() {
+        async function renderLibrary() {
             const list = document.getElementById('libraryList');
             const subtitle = document.getElementById('subtitle');
-            const tipCard = document.getElementById('tipCard');
+            const banner = document.getElementById('infoBanner');
+            const all = await dbGetAllMeta();
 
-            const count = library.length;
-            subtitle.textContent = count === 0
-                ? 'No videos watched yet'
-                : `${count} video${count !== 1 ? 's' : ''} tracked`;
+            const storage = await updateStorageInfo();
+            let subtitleText = '';
+            if (all.length === 0) {
+                subtitleText = 'No videos yet';
+            } else {
+                const totalSize = all.reduce((s, v) => s + (v.size || 0), 0);
+                subtitleText = `${all.length} video${all.length !== 1 ? 's' : ''} • ${formatBytes(totalSize)} used`;
+                if (storage) subtitleText += ` of ${formatBytes(storage.quota)}`;
+            }
+            subtitle.textContent = subtitleText;
 
-            tipCard.style.display = count > 0 ? 'block' : 'none';
+            if (all.length === 0) {
+                banner.innerHTML = `<div class="info-banner"><strong>Tap Import videos</strong> to pick files from your Files app. They will be copied into this app and stay available offline. No re-picking needed.</div>`;
+            } else if (storage && storage.pct > 85) {
+                banner.innerHTML = `<div class="info-banner warn"><strong>Storage almost full.</strong> Remove some videos to free up space.</div>`;
+            } else {
+                banner.innerHTML = '';
+            }
 
-            if (count === 0) {
+            if (all.length === 0) {
                 list.innerHTML = `
                     <div class="empty-state">
                         <div class="empty-icon">🎬</div>
-                        <div class="empty-title">No videos yet</div>
-                        <div class="empty-desc">Tap "Open video" to pick a video from your Files. The app will remember where you stopped.</div>
-                    </div>
-                `;
+                        <div class="empty-title">Your library is empty</div>
+                        <div class="empty-desc">Import videos from your Files app — they'll stay in this app and play instantly.</div>
+                    </div>`;
                 return;
             }
 
-            // Sort by most recently watched
-            const sorted = [...library].sort((a, b) => b.lastWatched - a.lastWatched);
-
+            const sorted = [...all].sort((a, b) => (b.lastWatched || 0) - (a.lastWatched || 0));
             const inProgress = sorted.filter(v => !v.completed && v.position > 0);
             const notStarted = sorted.filter(v => v.position === 0);
             const finished = sorted.filter(v => v.completed);
 
             let html = '';
-            if (inProgress.length > 0) {
-                html += `<div class="section-title">Continue watching</div>`;
-                html += inProgress.map(videoItemHtml).join('');
-            }
-            if (notStarted.length > 0) {
-                html += `<div class="section-title">Not started</div>`;
-                html += notStarted.map(videoItemHtml).join('');
-            }
-            if (finished.length > 0) {
-                html += `<div class="section-title">Finished</div>`;
-                html += finished.map(videoItemHtml).join('');
-            }
-
+            if (inProgress.length) { html += `<div class="section-title">Continue watching</div>` + inProgress.map(videoItemHtml).join(''); }
+            if (notStarted.length) { html += `<div class="section-title">Not started</div>` + notStarted.map(videoItemHtml).join(''); }
+            if (finished.length) { html += `<div class="section-title">Finished</div>` + finished.map(videoItemHtml).join(''); }
             list.innerHTML = html;
         }
 
         function videoItemHtml(v) {
             const pct = v.duration > 0 ? Math.round((v.position / v.duration) * 100) : 0;
             const complete = v.completed;
-            const remaining = v.duration - v.position;
-
             let statusText;
-            if (complete) {
-                statusText = '✓ Finished';
-            } else if (v.position === 0) {
-                statusText = v.duration ? formatTime(v.duration) : 'Not started';
-            } else {
-                statusText = `${formatTime(v.position)} / ${formatTime(v.duration)}`;
-            }
+            if (complete) statusText = '✓ Finished';
+            else if (v.position === 0) statusText = `${formatBytes(v.size)}${v.duration ? ' • ' + formatTime(v.duration) : ''}`;
+            else statusText = `${formatTime(v.position)} / ${formatTime(v.duration)} • ${pct}%`;
 
-            const rightText = complete ? '100%' : (v.position > 0 ? `${pct}% • ${formatTime(remaining)} left` : '');
-
+            const safeId = escapeAttr(v.id);
             return `
-                <div class="video-item">
-                    <div class="video-item-title">${escapeHtml(displayName(v.name))}</div>
-                    <div class="video-item-meta">
-                        <span>${statusText}</span>
-                        <span>${rightText}</span>
+                <div class="video-item" onclick="playVideo('${safeId}')">
+                    <div class="video-item-main">
+                        <div class="play-icon ${complete ? 'complete' : ''}">
+                            <svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg>
+                        </div>
+                        <div class="video-item-info">
+                            <div class="video-item-title">${escapeHtml(displayName(v.name))}</div>
+                            <div class="video-item-meta">${statusText}</div>
+                        </div>
                     </div>
-                    <div class="video-item-progress">
-                        <div class="video-item-progress-fill ${complete ? 'complete' : ''}" style="width: ${pct}%"></div>
+                    ${(v.position > 0 || complete) ? `<div class="video-item-progress"><div class="video-item-progress-fill ${complete ? 'complete' : ''}" style="width: ${pct}%"></div></div>` : ''}
+                    <div class="video-item-actions" onclick="event.stopPropagation()">
+                        ${v.position > 0 ? `<button class="mini-btn" onclick="resetVideo('${safeId}')">Reset</button>` : ''}
+                        <button class="mini-btn danger" onclick="deleteVideo('${safeId}')">Delete</button>
                     </div>
-                    <div class="video-item-actions">
-                        <button class="mini-btn primary" onclick="pickVideoToResume('${escapeAttr(v.fingerprint)}')">
-                            ${complete ? 'Watch again' : v.position > 0 ? `Resume at ${formatTime(v.position)}` : 'Start watching'}
-                        </button>
-                        ${v.position > 0 ? `<button class="mini-btn" onclick="resetVideo('${escapeAttr(v.fingerprint)}')">Reset</button>` : ''}
-                        <button class="mini-btn danger" onclick="removeVideo('${escapeAttr(v.fingerprint)}')">Remove</button>
-                    </div>
-                </div>
-            `;
+                </div>`;
         }
 
-        function resetVideo(fingerprint) {
-            const v = findVideo(fingerprint);
-            if (!v) return;
-            v.position = 0;
-            v.completed = false;
-            saveLibrary();
-            renderLibrary();
+        async function resetVideo(id) {
+            const meta = await dbGet(STORE_META, id);
+            if (!meta) return;
+            meta.position = 0; meta.completed = false;
+            await dbPut(STORE_META, meta);
+            await renderLibrary();
             showToast('Progress reset');
         }
 
-        function removeVideo(fingerprint) {
-            const v = findVideo(fingerprint);
-            if (!v) return;
-            showConfirm('Remove from list?', `"${displayName(v.name)}" will be removed from this list. Your video file is not deleted.`, () => {
-                library = library.filter(x => x.fingerprint !== fingerprint);
-                saveLibrary();
-                renderLibrary();
-                showToast('Removed');
-            });
+        async function deleteVideo(id) {
+            const meta = await dbGet(STORE_META, id);
+            if (!meta) return;
+            showDialog('Delete this video?',
+                `"${displayName(meta.name)}" will be removed from this app and ${formatBytes(meta.size)} will be freed. Your original file in the Files app is not affected.`,
+                [
+                    { text: 'Cancel', type: 'cancel' },
+                    { text: 'Delete', type: 'danger', action: async () => {
+                        await dbDelete(STORE_VIDEOS, id);
+                        await dbDelete(STORE_META, id);
+                        await renderLibrary();
+                        showToast('Video deleted');
+                    }}
+                ]);
         }
 
-        // ========== HELPERS ==========
-        function displayName(filename) {
-            // Strip extension for display
-            return filename.replace(/\.[^/.]+$/, '');
-        }
-
+        function displayName(filename) { return filename.replace(/\.[^/.]+$/, ''); }
         function formatTime(seconds) {
             if (!seconds || !isFinite(seconds)) return '0:00';
             const h = Math.floor(seconds / 3600);
             const m = Math.floor((seconds % 3600) / 60);
             const s = Math.floor(seconds % 60);
-            if (h > 0) return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-            return `${m}:${String(s).padStart(2, '0')}`;
+            if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+            return `${m}:${String(s).padStart(2,'0')}`;
         }
-
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        function formatBytes(bytes) {
+            if (!bytes) return '0 B';
+            const units = ['B', 'KB', 'MB', 'GB'];
+            let i = 0, n = bytes;
+            while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+            return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
         }
-
-        function escapeAttr(text) {
-            return String(text).replace(/'/g, "\\'");
-        }
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        function escapeAttr(text) { return String(text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
 
         function showToast(message) {
             const toast = document.getElementById('toast');
@@ -859,25 +575,38 @@
             setTimeout(() => toast.classList.remove('show'), 2500);
         }
 
-        function showConfirm(title, desc, callback) {
-            document.getElementById('confirmTitle').textContent = title;
-            document.getElementById('confirmDesc').textContent = desc;
-            const btn = document.getElementById('confirmBtn');
-            btn.onclick = () => { callback(); closeConfirm(); };
-            document.getElementById('confirmOverlay').classList.add('active');
+        function showDialog(title, desc, buttons) {
+            document.getElementById('dialogTitle').textContent = title;
+            document.getElementById('dialogDesc').textContent = desc;
+            const actions = document.getElementById('dialogActions');
+            actions.innerHTML = '';
+            buttons.forEach(b => {
+                const btn = document.createElement('button');
+                btn.textContent = b.text;
+                btn.className = b.type === 'danger' ? 'btn-danger' : b.type === 'primary' ? 'btn-primary-dialog' : 'btn-cancel';
+                btn.onclick = () => { closeDialog(); if (b.action) b.action(); };
+                actions.appendChild(btn);
+            });
+            document.getElementById('dialogOverlay').classList.add('active');
         }
+        function closeDialog() { document.getElementById('dialogOverlay').classList.remove('active'); }
+        document.getElementById('dialogOverlay').addEventListener('click', (e) => { if (e.target.id === 'dialogOverlay') closeDialog(); });
 
-        function closeConfirm() {
-            document.getElementById('confirmOverlay').classList.remove('active');
-        }
-
-        document.getElementById('confirmOverlay').addEventListener('click', (e) => {
-            if (e.target.id === 'confirmOverlay') closeConfirm();
-        });
-
-        // ========== INIT ==========
-        loadLibrary();
-        renderLibrary();
+        (async () => {
+            try {
+                db = await openDB();
+                await renderLibrary();
+                if (navigator.storage && navigator.storage.persisted) {
+                    const persisted = await navigator.storage.persisted();
+                    if (!persisted && navigator.storage.persist) {
+                        navigator.storage.persist().catch(() => {});
+                    }
+                }
+            } catch (e) {
+                console.error('Init error:', e);
+                showToast('Could not open storage');
+            }
+        })();
     </script>
 </body>
 </html>
