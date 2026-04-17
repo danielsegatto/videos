@@ -49,23 +49,58 @@
 
         .library-list { flex: 1; overflow-y: auto; padding: 8px 16px 20px; -webkit-overflow-scrolling: touch; }
         .section-title { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-2); margin: 14px 4px 8px; }
-        .video-item { background: var(--surface); border-radius: 12px; padding: 14px; margin-bottom: 10px; cursor: pointer; }
+        .video-item { background: var(--surface); border-radius: 12px; padding: 12px; margin-bottom: 10px; cursor: pointer; }
         .video-item:active { background: var(--surface-2); }
         .video-item-main { display: flex; align-items: center; gap: 12px; }
-        .play-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .play-icon svg { width: 18px; height: 18px; fill: var(--accent); margin-left: 2px; }
-        .play-icon.complete { background: rgba(48,209,88,0.15); }
-        .play-icon.complete svg { fill: var(--success); }
+
+        .thumb-container {
+            width: 100px; height: 62px; flex-shrink: 0; border-radius: 8px;
+            background: var(--surface-2); overflow: hidden; position: relative;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .thumb-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .thumb-container .play-overlay {
+            position: absolute; inset: 0; display: flex; align-items: center;
+            justify-content: center; background: rgba(0,0,0,0.35);
+        }
+        .thumb-container .play-overlay svg { width: 22px; height: 22px; fill: white; margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
+        .thumb-container.complete .play-overlay { background: rgba(48,209,88,0.35); }
+        .thumb-container .no-thumb { color: var(--text-3); font-size: 22px; }
+        .thumb-container .thumb-duration {
+            position: absolute; bottom: 4px; right: 4px;
+            background: rgba(0,0,0,0.75); color: white;
+            font-size: 10px; font-weight: 600;
+            padding: 2px 5px; border-radius: 4px;
+        }
+
         .video-item-info { flex: 1; min-width: 0; }
-        .video-item-title { font-size: 15px; font-weight: 500; line-height: 1.3; margin-bottom: 4px; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .video-item-title {
+            font-size: 14px; font-weight: 500; line-height: 1.3;
+            margin-bottom: 4px; word-break: break-word;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
         .video-item-meta { font-size: 12px; color: var(--text-2); }
-        .video-item-progress { height: 3px; background: var(--surface-2); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+        .rename-input {
+            width: 100%; background: var(--surface-3); border: 1px solid var(--accent);
+            border-radius: 6px; color: var(--text); font-size: 14px; font-weight: 500;
+            padding: 6px 8px; font-family: inherit; outline: none;
+            margin-bottom: 4px;
+        }
+
+        .video-item-progress { height: 3px; background: var(--surface-2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
         .video-item-progress-fill { height: 100%; background: var(--accent); }
         .video-item-progress-fill.complete { background: var(--success); }
         .video-item-actions { display: flex; gap: 6px; margin-top: 10px; }
-        .mini-btn { padding: 6px 10px; background: var(--surface-2); border: none; border-radius: 7px; color: var(--text-2); font-size: 11px; font-weight: 500; cursor: pointer; font-family: inherit; }
+        .mini-btn {
+            padding: 7px 10px; background: var(--surface-2); border: none;
+            border-radius: 7px; color: var(--text-2); font-size: 11px;
+            font-weight: 500; cursor: pointer; font-family: inherit;
+            display: inline-flex; align-items: center; gap: 4px;
+        }
         .mini-btn:active { opacity: 0.7; }
         .mini-btn.danger { color: var(--danger); }
+        .mini-btn.accent { color: var(--accent); }
+        .mini-btn svg { width: 12px; height: 12px; }
 
         .empty-state { text-align: center; padding: 60px 20px; color: var(--text-2); }
         .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.3; }
@@ -201,6 +236,7 @@
         let currentVideo = null;
         let currentObjectURL = null;
         let saveTimer = null;
+        let editingId = null;
 
         const video = document.getElementById('videoPlayer');
         const fileInput = document.getElementById('fileInput');
@@ -294,6 +330,70 @@
             } catch (e) { showToast('Storage error'); }
         }
 
+        // ========== THUMBNAIL GENERATION ==========
+        function generateThumbnail(file) {
+            return new Promise((resolve) => {
+                const v = document.createElement('video');
+                v.preload = 'metadata';
+                v.muted = true;
+                v.playsInline = true;
+                v.setAttribute('playsinline', '');
+                v.setAttribute('webkit-playsinline', '');
+
+                const url = URL.createObjectURL(file);
+                let settled = false;
+                let duration = 0;
+
+                const cleanup = () => {
+                    try { URL.revokeObjectURL(url); } catch(e) {}
+                    v.src = '';
+                };
+
+                const finish = (result) => {
+                    if (settled) return;
+                    settled = true;
+                    cleanup();
+                    resolve(result);
+                };
+
+                const timeout = setTimeout(() => finish({ thumbnail: null, duration: 0 }), 15000);
+
+                v.onloadedmetadata = () => {
+                    duration = v.duration || 0;
+                    // Seek to 2 seconds or 10% in, whichever is smaller
+                    const seekTo = Math.min(2, duration * 0.1);
+                    try { v.currentTime = Math.max(0.1, seekTo); }
+                    catch(e) { finish({ thumbnail: null, duration }); }
+                };
+
+                v.onseeked = () => {
+                    try {
+                        const canvas = document.createElement('canvas');
+                        const maxWidth = 200;
+                        const ratio = v.videoHeight / v.videoWidth;
+                        canvas.width = Math.min(maxWidth, v.videoWidth || maxWidth);
+                        canvas.height = Math.round(canvas.width * ratio) || 113;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+                        const dataURL = canvas.toDataURL('image/jpeg', 0.6);
+                        clearTimeout(timeout);
+                        finish({ thumbnail: dataURL, duration });
+                    } catch(e) {
+                        clearTimeout(timeout);
+                        finish({ thumbnail: null, duration });
+                    }
+                };
+
+                v.onerror = () => {
+                    clearTimeout(timeout);
+                    finish({ thumbnail: null, duration });
+                };
+
+                v.src = url;
+            });
+        }
+
+        // ========== IMPORT ==========
         function importVideos() { fileInput.click(); }
 
         fileInput.addEventListener('change', async (e) => {
@@ -311,22 +411,28 @@
                 document.getElementById('importTitle').textContent = `Importing ${i + 1} of ${files.length}`;
                 document.getElementById('importFile').textContent = file.name;
                 document.getElementById('importFill').style.width = '0%';
-                document.getElementById('importStatus').textContent = `${formatBytes(file.size)} — reading file...`;
+                document.getElementById('importStatus').textContent = `${formatBytes(file.size)} — reading...`;
 
                 try {
                     const id = `${file.name}::${file.size}::${file.lastModified || 0}`;
                     const existing = await dbGet(STORE_META, id);
                     if (existing) { skipped++; continue; }
 
-                    document.getElementById('importStatus').textContent = `${formatBytes(file.size)} — saving to app...`;
-                    document.getElementById('importFill').style.width = '50%';
+                    document.getElementById('importFill').style.width = '30%';
+                    document.getElementById('importStatus').textContent = `Generating thumbnail...`;
+
+                    const { thumbnail, duration } = await generateThumbnail(file);
+
+                    document.getElementById('importFill').style.width = '60%';
+                    document.getElementById('importStatus').textContent = `Saving to app...`;
 
                     await dbPut(STORE_VIDEOS, { id, blob: file });
 
                     const meta = {
                         id, name: file.name, size: file.size, type: file.type,
-                        duration: 0, position: 0, completed: false,
-                        dateAdded: Date.now(), lastWatched: 0, watchCount: 0
+                        duration: duration || 0, position: 0, completed: false,
+                        dateAdded: Date.now(), lastWatched: 0, watchCount: 0,
+                        customName: null, thumbnail: thumbnail || null
                     };
                     await dbPut(STORE_META, meta);
                     document.getElementById('importFill').style.width = '100%';
@@ -353,7 +459,9 @@
             await updateStorageInfo();
         });
 
+        // ========== PLAYBACK ==========
         async function playVideo(id) {
+            if (editingId) return; // Don't play while editing
             const meta = await dbGet(STORE_META, id);
             if (!meta) { showToast('Video not found'); return; }
             const record = await dbGet(STORE_VIDEOS, id);
@@ -366,7 +474,7 @@
 
             document.getElementById('libraryView').classList.add('hidden');
             document.getElementById('playerView').classList.add('active');
-            document.getElementById('playerTitle').textContent = displayName(meta.name);
+            document.getElementById('playerTitle').textContent = getTitle(meta);
 
             const banner = document.getElementById('resumeBanner');
             if (meta.position > 0 && !meta.completed) {
@@ -384,8 +492,10 @@
 
         video.addEventListener('loadedmetadata', async () => {
             if (!currentVideo) return;
-            currentVideo.duration = video.duration;
-            await dbPut(STORE_META, currentVideo);
+            if (!currentVideo.duration || currentVideo.duration === 0) {
+                currentVideo.duration = video.duration;
+                await dbPut(STORE_META, currentVideo);
+            }
             if (currentVideo.position > 0 && !currentVideo.completed) {
                 const seekTo = Math.min(currentVideo.position, video.duration - 1);
                 if (seekTo > 0) video.currentTime = seekTo;
@@ -449,6 +559,63 @@
             await renderLibrary();
         }
 
+        // ========== RENAME (inline edit) ==========
+        async function startRename(id, ev) {
+            if (ev) ev.stopPropagation();
+            if (editingId) return;
+            editingId = id;
+
+            const meta = await dbGet(STORE_META, id);
+            if (!meta) return;
+
+            const item = document.querySelector(`[data-id="${cssEscape(id)}"]`);
+            if (!item) return;
+            const titleEl = item.querySelector('.video-item-title');
+            if (!titleEl) return;
+
+            const currentTitle = getTitle(meta);
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'rename-input';
+            input.value = currentTitle;
+            input.maxLength = 200;
+
+            // Replace title with input
+            titleEl.replaceWith(input);
+
+            // Focus and select all text
+            setTimeout(() => {
+                input.focus();
+                input.select();
+            }, 50);
+
+            let finished = false;
+            const finishEdit = async (save) => {
+                if (finished) return;
+                finished = true;
+                const newName = input.value.trim();
+                if (save && newName && newName !== currentTitle) {
+                    const fresh = await dbGet(STORE_META, id);
+                    if (fresh) {
+                        fresh.customName = newName;
+                        await dbPut(STORE_META, fresh);
+                        showToast('Renamed');
+                    }
+                }
+                editingId = null;
+                await renderLibrary();
+            };
+
+            input.addEventListener('blur', () => finishEdit(true));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
+                if (e.key === 'Escape') { finished = true; editingId = null; renderLibrary(); }
+            });
+            // Prevent tap from bubbling to the card
+            input.addEventListener('click', (e) => e.stopPropagation());
+        }
+
+        // ========== LIBRARY RENDERING ==========
         async function renderLibrary() {
             const list = document.getElementById('libraryList');
             const subtitle = document.getElementById('subtitle');
@@ -501,23 +668,31 @@
             const complete = v.completed;
             let statusText;
             if (complete) statusText = '✓ Finished';
-            else if (v.position === 0) statusText = `${formatBytes(v.size)}${v.duration ? ' • ' + formatTime(v.duration) : ''}`;
+            else if (v.position === 0) statusText = `${formatBytes(v.size)}`;
             else statusText = `${formatTime(v.position)} / ${formatTime(v.duration)} • ${pct}%`;
 
             const safeId = escapeAttr(v.id);
+            const durationBadge = v.duration > 0 ? `<div class="thumb-duration">${formatTime(v.duration)}</div>` : '';
+
+            const thumbInner = v.thumbnail
+                ? `<img src="${v.thumbnail}" alt=""><div class="play-overlay"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>${durationBadge}`
+                : `<div class="no-thumb">🎬</div><div class="play-overlay"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>${durationBadge}`;
+
             return `
-                <div class="video-item" onclick="playVideo('${safeId}')">
+                <div class="video-item" data-id="${safeId}" onclick="playVideo('${safeId}')">
                     <div class="video-item-main">
-                        <div class="play-icon ${complete ? 'complete' : ''}">
-                            <svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg>
-                        </div>
+                        <div class="thumb-container ${complete ? 'complete' : ''}">${thumbInner}</div>
                         <div class="video-item-info">
-                            <div class="video-item-title">${escapeHtml(displayName(v.name))}</div>
+                            <div class="video-item-title">${escapeHtml(getTitle(v))}</div>
                             <div class="video-item-meta">${statusText}</div>
                         </div>
                     </div>
                     ${(v.position > 0 || complete) ? `<div class="video-item-progress"><div class="video-item-progress-fill ${complete ? 'complete' : ''}" style="width: ${pct}%"></div></div>` : ''}
                     <div class="video-item-actions" onclick="event.stopPropagation()">
+                        <button class="mini-btn accent" onclick="startRename('${safeId}', event)">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 1 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                            Rename
+                        </button>
                         ${v.position > 0 ? `<button class="mini-btn" onclick="resetVideo('${safeId}')">Reset</button>` : ''}
                         <button class="mini-btn danger" onclick="deleteVideo('${safeId}')">Delete</button>
                     </div>
@@ -537,7 +712,7 @@
             const meta = await dbGet(STORE_META, id);
             if (!meta) return;
             showDialog('Delete this video?',
-                `"${displayName(meta.name)}" will be removed from this app and ${formatBytes(meta.size)} will be freed. Your original file in the Files app is not affected.`,
+                `"${getTitle(meta)}" will be removed from this app and ${formatBytes(meta.size)} will be freed. Your original file in the Files app is not affected.`,
                 [
                     { text: 'Cancel', type: 'cancel' },
                     { text: 'Delete', type: 'danger', action: async () => {
@@ -549,7 +724,12 @@
                 ]);
         }
 
-        function displayName(filename) { return filename.replace(/\.[^/.]+$/, ''); }
+        // ========== HELPERS ==========
+        function getTitle(meta) {
+            if (meta.customName && meta.customName.trim()) return meta.customName;
+            return meta.name.replace(/\.[^/.]+$/, '');
+        }
+
         function formatTime(seconds) {
             if (!seconds || !isFinite(seconds)) return '0:00';
             const h = Math.floor(seconds / 3600);
@@ -567,6 +747,10 @@
         }
         function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
         function escapeAttr(text) { return String(text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+        function cssEscape(text) {
+            if (window.CSS && CSS.escape) return CSS.escape(text);
+            return String(text).replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
+        }
 
         function showToast(message) {
             const toast = document.getElementById('toast');
