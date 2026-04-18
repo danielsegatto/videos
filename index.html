@@ -15,15 +15,12 @@
             --bg: #000; --surface: #1c1c1e; --surface-2: #2c2c2e; --surface-3: #3a3a3c;
             --text: #fff; --text-2: #8e8e93; --text-3: #636366;
             --accent: #0A84FF; --accent-light: rgba(10,132,255,0.15);
+            --yt: #FF3B30; --yt-dark: #CC2E26;
             --success: #30D158; --danger: #FF453A; --warning: #FF9F0A;
             --border: rgba(255,255,255,0.08);
         }
         html, body { height: 100%; overflow: hidden; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-            background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased;
-            padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom);
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif; background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
         .app { display: flex; flex-direction: column; height: 100vh; height: 100dvh; max-width: 700px; margin: 0 auto; }
 
         .library-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
@@ -38,12 +35,14 @@
 
         .toolbar { display: flex; gap: 8px; padding: 12px 16px; flex-shrink: 0; border-bottom: 0.5px solid var(--border); }
         .toolbar button {
-            flex: 1; padding: 12px 8px; background: var(--surface);
+            padding: 12px 8px; background: var(--surface);
             border: none; border-radius: 10px; color: var(--text);
             font-size: 14px; font-weight: 500; cursor: pointer; font-family: inherit;
             display: flex; align-items: center; justify-content: center; gap: 6px;
         }
-        .toolbar button.primary { background: var(--accent); }
+        .toolbar .btn-import { flex: 1; background: var(--accent); }
+        .toolbar .btn-yt { flex: 1; background: var(--yt); }
+        .toolbar .btn-protect { width: 46px; padding: 12px 0; }
         .toolbar button:active { opacity: 0.75; }
         .toolbar svg { width: 16px; height: 16px; }
 
@@ -53,50 +52,25 @@
         .video-item:active { background: var(--surface-2); }
         .video-item-main { display: flex; align-items: center; gap: 12px; }
 
-        .thumb-container {
-            width: 100px; height: 62px; flex-shrink: 0; border-radius: 8px;
-            background: var(--surface-2); overflow: hidden; position: relative;
-            display: flex; align-items: center; justify-content: center;
-        }
+        .thumb-container { width: 100px; height: 62px; flex-shrink: 0; border-radius: 8px; background: var(--surface-2); overflow: hidden; position: relative; display: flex; align-items: center; justify-content: center; }
         .thumb-container img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .thumb-container .play-overlay {
-            position: absolute; inset: 0; display: flex; align-items: center;
-            justify-content: center; background: rgba(0,0,0,0.35);
-        }
+        .thumb-container .play-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); }
         .thumb-container .play-overlay svg { width: 22px; height: 22px; fill: white; margin-left: 2px; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.5)); }
         .thumb-container.complete .play-overlay { background: rgba(48,209,88,0.35); }
         .thumb-container .no-thumb { color: var(--text-3); font-size: 22px; }
-        .thumb-container .thumb-duration {
-            position: absolute; bottom: 4px; right: 4px;
-            background: rgba(0,0,0,0.75); color: white;
-            font-size: 10px; font-weight: 600;
-            padding: 2px 5px; border-radius: 4px;
-        }
+        .thumb-container .thumb-duration { position: absolute; bottom: 4px; right: 4px; background: rgba(0,0,0,0.75); color: white; font-size: 10px; font-weight: 600; padding: 2px 5px; border-radius: 4px; }
+        .thumb-container .yt-badge { position: absolute; top: 4px; left: 4px; background: var(--yt); color: white; font-size: 9px; font-weight: 700; padding: 2px 5px; border-radius: 3px; letter-spacing: 0.5px; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
 
         .video-item-info { flex: 1; min-width: 0; }
-        .video-item-title {
-            font-size: 14px; font-weight: 500; line-height: 1.3;
-            margin-bottom: 4px; word-break: break-word;
-            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-        }
+        .video-item-title { font-size: 14px; font-weight: 500; line-height: 1.3; margin-bottom: 4px; word-break: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .video-item-meta { font-size: 12px; color: var(--text-2); }
-        .rename-input {
-            width: 100%; background: var(--surface-3); border: 1px solid var(--accent);
-            border-radius: 6px; color: var(--text); font-size: 14px; font-weight: 500;
-            padding: 6px 8px; font-family: inherit; outline: none;
-            margin-bottom: 4px;
-        }
+        .rename-input { width: 100%; background: var(--surface-3); border: 1px solid var(--accent); border-radius: 6px; color: var(--text); font-size: 14px; font-weight: 500; padding: 6px 8px; font-family: inherit; outline: none; margin-bottom: 4px; }
 
         .video-item-progress { height: 3px; background: var(--surface-2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
         .video-item-progress-fill { height: 100%; background: var(--accent); }
         .video-item-progress-fill.complete { background: var(--success); }
-        .video-item-actions { display: flex; gap: 6px; margin-top: 10px; }
-        .mini-btn {
-            padding: 7px 10px; background: var(--surface-2); border: none;
-            border-radius: 7px; color: var(--text-2); font-size: 11px;
-            font-weight: 500; cursor: pointer; font-family: inherit;
-            display: inline-flex; align-items: center; gap: 4px;
-        }
+        .video-item-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+        .mini-btn { padding: 7px 10px; background: var(--surface-2); border: none; border-radius: 7px; color: var(--text-2); font-size: 11px; font-weight: 500; cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; gap: 4px; }
         .mini-btn:active { opacity: 0.7; }
         .mini-btn.danger { color: var(--danger); }
         .mini-btn.accent { color: var(--accent); }
@@ -114,6 +88,9 @@
         .player-title { flex: 1; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .player-container { flex: 1; display: flex; align-items: center; justify-content: center; background: #000; position: relative; min-height: 0; }
         video { width: 100%; height: 100%; max-height: 100%; object-fit: contain; background: #000; }
+        #ytPlayerContainer { width: 100%; height: 100%; display: none; }
+        #ytPlayerContainer.active { display: block; }
+        #ytPlayer, #ytPlayer iframe { width: 100% !important; height: 100% !important; }
         .player-footer { padding: 10px 16px; background: var(--surface); flex-shrink: 0; }
         .save-indicator { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-2); }
         .save-dot { width: 8px; height: 8px; background: var(--success); border-radius: 50%; animation: pulse 2s ease-in-out infinite; }
@@ -143,6 +120,12 @@
         .btn-cancel { background: var(--surface-2); color: var(--text); }
         .btn-danger { background: var(--danger); color: white; }
         .btn-primary-dialog { background: var(--accent); color: white; }
+        .btn-yt-dialog { background: var(--yt); color: white; }
+
+        .yt-input { width: 100%; padding: 12px; background: var(--surface-2); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-size: 15px; font-family: inherit; outline: none; margin-bottom: 10px; }
+        .yt-input:focus { border-color: var(--yt); }
+        .yt-error { color: var(--danger); font-size: 13px; margin-bottom: 10px; }
+        .yt-loading { text-align: center; padding: 10px; color: var(--text-2); font-size: 13px; }
 
         input[type="file"] { display: none; }
 
@@ -162,17 +145,22 @@
             </div>
 
             <div class="toolbar">
-                <button class="primary" onclick="importVideos()">
+                <button class="btn-import" onclick="importVideos()">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 5v14M5 12h14"/>
                     </svg>
-                    Import videos
+                    Import files
                 </button>
-                <button onclick="requestPersistentStorage()">
+                <button class="btn-yt" onclick="openYTDialog()">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.5A3 3 0 0 0 .5 6.2C0 8.1 0 12 0 12s0 3.9.5 5.8a3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1c.5-1.9.5-5.8.5-5.8s0-3.9-.5-5.8ZM9.6 15.6V8.4l6.2 3.6Z"/>
+                    </svg>
+                    YouTube
+                </button>
+                <button class="btn-protect" onclick="requestPersistentStorage()" title="Protect storage">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
                     </svg>
-                    Protect
                 </button>
             </div>
 
@@ -193,6 +181,7 @@
             <div id="resumeBanner" style="display:none;" class="resume-banner"></div>
             <div class="player-container">
                 <video id="videoPlayer" controls playsinline preload="metadata" webkit-playsinline></video>
+                <div id="ytPlayerContainer"><div id="ytPlayer"></div></div>
             </div>
             <div class="player-footer">
                 <div class="save-indicator">
@@ -224,6 +213,21 @@
         </div>
     </div>
 
+    <!-- YouTube URL dialog -->
+    <div class="dialog-overlay" id="ytDialog">
+        <div class="dialog-box">
+            <div class="dialog-title">Add YouTube video</div>
+            <div class="dialog-desc">Paste a YouTube URL. The title and thumbnail will be fetched automatically.</div>
+            <input type="url" id="ytUrlInput" class="yt-input" placeholder="https://www.youtube.com/watch?v=..." autocomplete="off" autocapitalize="off" spellcheck="false">
+            <div id="ytError" class="yt-error" style="display:none;"></div>
+            <div id="ytLoading" class="yt-loading" style="display:none;">Fetching video info...</div>
+            <div class="dialog-actions">
+                <button class="btn-cancel" onclick="closeYTDialog()">Cancel</button>
+                <button class="btn-yt-dialog" id="ytAddBtn" onclick="submitYTUrl()">Add</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         'use strict';
         const DB_NAME = 'VideoPlayerDB';
@@ -238,9 +242,16 @@
         let saveTimer = null;
         let editingId = null;
 
+        // YouTube state
+        let ytPlayer = null;
+        let ytAPIReady = false;
+        let ytAPILoading = false;
+        const ytAPICallbacks = [];
+
         const video = document.getElementById('videoPlayer');
         const fileInput = document.getElementById('fileInput');
 
+        // ============== INDEXEDDB ==============
         function openDB() {
             return new Promise((resolve, reject) => {
                 const req = indexedDB.open(DB_NAME, DB_VERSION);
@@ -257,43 +268,12 @@
                 };
             });
         }
+        function dbGet(store, id) { return new Promise((resolve, reject) => { const tx = db.transaction(store, 'readonly'); const req = tx.objectStore(store).get(id); req.onsuccess = () => resolve(req.result); req.onerror = () => reject(req.error); }); }
+        function dbPut(store, value) { return new Promise((resolve, reject) => { const tx = db.transaction(store, 'readwrite'); const req = tx.objectStore(store).put(value); req.onsuccess = () => resolve(); req.onerror = () => reject(req.error); }); }
+        function dbDelete(store, id) { return new Promise((resolve, reject) => { const tx = db.transaction(store, 'readwrite'); const req = tx.objectStore(store).delete(id); req.onsuccess = () => resolve(); req.onerror = () => reject(req.error); }); }
+        function dbGetAllMeta() { return new Promise((resolve, reject) => { const tx = db.transaction(STORE_META, 'readonly'); const req = tx.objectStore(STORE_META).getAll(); req.onsuccess = () => resolve(req.result || []); req.onerror = () => reject(req.error); }); }
 
-        function dbGet(store, id) {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(store, 'readonly');
-                const req = tx.objectStore(store).get(id);
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            });
-        }
-
-        function dbPut(store, value) {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(store, 'readwrite');
-                const req = tx.objectStore(store).put(value);
-                req.onsuccess = () => resolve();
-                req.onerror = () => reject(req.error);
-            });
-        }
-
-        function dbDelete(store, id) {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(store, 'readwrite');
-                const req = tx.objectStore(store).delete(id);
-                req.onsuccess = () => resolve();
-                req.onerror = () => reject(req.error);
-            });
-        }
-
-        function dbGetAllMeta() {
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(STORE_META, 'readonly');
-                const req = tx.objectStore(STORE_META).getAll();
-                req.onsuccess = () => resolve(req.result || []);
-                req.onerror = () => reject(req.error);
-            });
-        }
-
+        // ============== STORAGE ==============
         async function updateStorageInfo() {
             if (!navigator.storage || !navigator.storage.estimate) return null;
             try {
@@ -309,63 +289,32 @@
         }
 
         async function requestPersistentStorage() {
-            if (!navigator.storage || !navigator.storage.persist) {
-                showToast('Not supported on this device');
-                return;
-            }
+            if (!navigator.storage || !navigator.storage.persist) { showToast('Not supported on this device'); return; }
             try {
                 const already = await navigator.storage.persisted();
-                if (already) {
-                    showDialog('Storage protected', 'Your videos are protected from automatic cleanup.', [{ text: 'OK', type: 'primary' }]);
-                    return;
-                }
+                if (already) { showDialog('Storage protected', 'Your videos are protected from automatic cleanup.', [{ text: 'OK', type: 'primary' }]); return; }
                 const granted = await navigator.storage.persist();
-                if (granted) {
-                    showToast('Storage protected');
-                } else {
-                    showDialog('Add to Home Screen first',
-                        'To protect your videos from being cleared by iOS, tap the Share button in Safari and choose "Add to Home Screen". That tells iOS to keep your data safe.',
-                        [{ text: 'OK', type: 'primary' }]);
-                }
+                if (granted) { showToast('Storage protected'); }
+                else { showDialog('Add to Home Screen first', 'To protect your videos from being cleared by iOS, tap Share in Safari and choose "Add to Home Screen".', [{ text: 'OK', type: 'primary' }]); }
             } catch (e) { showToast('Storage error'); }
         }
 
-        // ========== THUMBNAIL GENERATION ==========
+        // ============== THUMBNAIL (local) ==============
         function generateThumbnail(file) {
             return new Promise((resolve) => {
                 const v = document.createElement('video');
-                v.preload = 'metadata';
-                v.muted = true;
-                v.playsInline = true;
-                v.setAttribute('playsinline', '');
-                v.setAttribute('webkit-playsinline', '');
-
+                v.preload = 'metadata'; v.muted = true; v.playsInline = true;
+                v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
                 const url = URL.createObjectURL(file);
-                let settled = false;
-                let duration = 0;
-
-                const cleanup = () => {
-                    try { URL.revokeObjectURL(url); } catch(e) {}
-                    v.src = '';
-                };
-
-                const finish = (result) => {
-                    if (settled) return;
-                    settled = true;
-                    cleanup();
-                    resolve(result);
-                };
-
+                let settled = false; let duration = 0;
+                const cleanup = () => { try { URL.revokeObjectURL(url); } catch(e) {} v.src = ''; };
+                const finish = (result) => { if (settled) return; settled = true; cleanup(); resolve(result); };
                 const timeout = setTimeout(() => finish({ thumbnail: null, duration: 0 }), 15000);
-
                 v.onloadedmetadata = () => {
                     duration = v.duration || 0;
-                    // Seek to 2 seconds or 10% in, whichever is smaller
                     const seekTo = Math.min(2, duration * 0.1);
-                    try { v.currentTime = Math.max(0.1, seekTo); }
-                    catch(e) { finish({ thumbnail: null, duration }); }
+                    try { v.currentTime = Math.max(0.1, seekTo); } catch(e) { finish({ thumbnail: null, duration }); }
                 };
-
                 v.onseeked = () => {
                     try {
                         const canvas = document.createElement('canvas');
@@ -376,60 +325,42 @@
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
                         const dataURL = canvas.toDataURL('image/jpeg', 0.6);
-                        clearTimeout(timeout);
-                        finish({ thumbnail: dataURL, duration });
-                    } catch(e) {
-                        clearTimeout(timeout);
-                        finish({ thumbnail: null, duration });
-                    }
+                        clearTimeout(timeout); finish({ thumbnail: dataURL, duration });
+                    } catch(e) { clearTimeout(timeout); finish({ thumbnail: null, duration }); }
                 };
-
-                v.onerror = () => {
-                    clearTimeout(timeout);
-                    finish({ thumbnail: null, duration });
-                };
-
+                v.onerror = () => { clearTimeout(timeout); finish({ thumbnail: null, duration }); };
                 v.src = url;
             });
         }
 
-        // ========== IMPORT ==========
+        // ============== IMPORT FILES ==============
         function importVideos() { fileInput.click(); }
 
         fileInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files);
             if (!files.length) return;
             fileInput.value = '';
-
             const overlay = document.getElementById('importOverlay');
             overlay.classList.add('active');
-
             let imported = 0, skipped = 0, failed = 0;
-
             for (let i = 0; i < files.length; i++) {
                 const file = files[i];
                 document.getElementById('importTitle').textContent = `Importing ${i + 1} of ${files.length}`;
                 document.getElementById('importFile').textContent = file.name;
                 document.getElementById('importFill').style.width = '0%';
                 document.getElementById('importStatus').textContent = `${formatBytes(file.size)} — reading...`;
-
                 try {
-                    const id = `${file.name}::${file.size}::${file.lastModified || 0}`;
+                    const id = `local::${file.name}::${file.size}::${file.lastModified || 0}`;
                     const existing = await dbGet(STORE_META, id);
                     if (existing) { skipped++; continue; }
-
                     document.getElementById('importFill').style.width = '30%';
                     document.getElementById('importStatus').textContent = `Generating thumbnail...`;
-
                     const { thumbnail, duration } = await generateThumbnail(file);
-
                     document.getElementById('importFill').style.width = '60%';
                     document.getElementById('importStatus').textContent = `Saving to app...`;
-
                     await dbPut(STORE_VIDEOS, { id, blob: file });
-
                     const meta = {
-                        id, name: file.name, size: file.size, type: file.type,
+                        id, type: 'local', name: file.name, size: file.size, mimeType: file.type,
                         duration: duration || 0, position: 0, completed: false,
                         dateAdded: Date.now(), lastWatched: 0, watchCount: 0,
                         customName: null, thumbnail: thumbnail || null
@@ -440,42 +371,235 @@
                 } catch (err) {
                     console.error('Import error:', err);
                     failed++;
-                    if (err.name === 'QuotaExceededError') {
-                        showToast('Storage full — delete some videos');
-                        break;
-                    }
+                    if (err.name === 'QuotaExceededError') { showToast('Storage full — delete some videos'); break; }
                 }
             }
-
             overlay.classList.remove('active');
-
             let msg = '';
             if (imported) msg += `${imported} imported`;
             if (skipped) msg += (msg ? ', ' : '') + `${skipped} already in library`;
             if (failed) msg += (msg ? ', ' : '') + `${failed} failed`;
             if (msg) showToast(msg);
-
             await renderLibrary();
             await updateStorageInfo();
         });
 
-        // ========== PLAYBACK ==========
+        // ============== YOUTUBE URL ==============
+        function extractYouTubeId(url) {
+            if (!url) return null;
+            url = url.trim();
+            if (/^[a-zA-Z0-9_-]{11}$/.test(url)) return url;
+            const patterns = [
+                /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|v\/|live\/)|youtu\.be\/|m\.youtube\.com\/watch\?(?:.*&)?v=)([a-zA-Z0-9_-]{11})/,
+                /[?&]v=([a-zA-Z0-9_-]{11})/
+            ];
+            for (const p of patterns) { const m = url.match(p); if (m) return m[1]; }
+            return null;
+        }
+
+        async function fetchYouTubeInfo(videoId) {
+            try {
+                const url = `https://www.youtube.com/oembed?url=https://www.youtube.com/watch?v=${videoId}&format=json`;
+                const res = await fetch(url);
+                if (!res.ok) return null;
+                const data = await res.json();
+                return { title: data.title || null, author: data.author_name || null, thumbnail: data.thumbnail_url || null };
+            } catch (e) { return null; }
+        }
+
+        function openYTDialog() {
+            document.getElementById('ytUrlInput').value = '';
+            document.getElementById('ytError').style.display = 'none';
+            document.getElementById('ytLoading').style.display = 'none';
+            document.getElementById('ytAddBtn').disabled = false;
+            document.getElementById('ytDialog').classList.add('active');
+            setTimeout(() => { document.getElementById('ytUrlInput').focus(); }, 100);
+        }
+        function closeYTDialog() { document.getElementById('ytDialog').classList.remove('active'); }
+
+        async function submitYTUrl() {
+            const input = document.getElementById('ytUrlInput');
+            const errEl = document.getElementById('ytError');
+            const loadEl = document.getElementById('ytLoading');
+            const btn = document.getElementById('ytAddBtn');
+            const url = input.value.trim();
+            errEl.style.display = 'none';
+
+            const videoId = extractYouTubeId(url);
+            if (!videoId) {
+                errEl.textContent = "That doesn't look like a YouTube URL. Try copying it again from the YouTube app.";
+                errEl.style.display = 'block';
+                return;
+            }
+
+            const id = `yt::${videoId}`;
+            const existing = await dbGet(STORE_META, id);
+            if (existing) {
+                errEl.textContent = "This video is already in your library.";
+                errEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            loadEl.style.display = 'block';
+            const info = await fetchYouTubeInfo(videoId);
+            loadEl.style.display = 'none';
+
+            const fallbackThumb = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+            const meta = {
+                id, type: 'youtube', videoId,
+                name: (info && info.title) ? info.title : `YouTube video (${videoId})`,
+                author: info ? info.author : null,
+                size: 0, duration: 0, position: 0, completed: false,
+                dateAdded: Date.now(), lastWatched: 0, watchCount: 0,
+                customName: null,
+                thumbnail: (info && info.thumbnail) ? info.thumbnail : fallbackThumb
+            };
+            try {
+                await dbPut(STORE_META, meta);
+                closeYTDialog();
+                showToast('YouTube video added');
+                await renderLibrary();
+            } catch (e) {
+                errEl.textContent = 'Could not save. Please try again.';
+                errEl.style.display = 'block';
+                btn.disabled = false;
+            }
+        }
+
+        document.getElementById('ytUrlInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); submitYTUrl(); }
+        });
+        document.getElementById('ytDialog').addEventListener('click', (e) => {
+            if (e.target.id === 'ytDialog') closeYTDialog();
+        });
+
+        // ============== YOUTUBE IFRAME API ==============
+        function loadYouTubeAPI() {
+            return new Promise((resolve) => {
+                if (ytAPIReady && window.YT && window.YT.Player) { resolve(); return; }
+                ytAPICallbacks.push(resolve);
+                if (ytAPILoading) return;
+                ytAPILoading = true;
+                window.onYouTubeIframeAPIReady = () => {
+                    ytAPIReady = true;
+                    ytAPICallbacks.forEach(cb => cb());
+                    ytAPICallbacks.length = 0;
+                };
+                const tag = document.createElement('script');
+                tag.src = 'https://www.youtube.com/iframe_api';
+                tag.onerror = () => { ytAPILoading = false; };
+                document.head.appendChild(tag);
+            });
+        }
+
+        async function playYouTubeVideo(meta) {
+            currentVideo = meta;
+            // Hide local, show YT container
+            video.style.display = 'none';
+            document.getElementById('ytPlayerContainer').classList.add('active');
+
+            await loadYouTubeAPI();
+            // Recreate container div (YT.Player replaces it)
+            const container = document.getElementById('ytPlayerContainer');
+            container.innerHTML = '<div id="ytPlayer"></div>';
+
+            if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
+
+            const startAt = (meta.position > 0 && !meta.completed) ? Math.floor(meta.position) : 0;
+
+            ytPlayer = new YT.Player('ytPlayer', {
+                videoId: meta.videoId,
+                playerVars: { playsinline: 1, modestbranding: 1, rel: 0, start: startAt, iv_load_policy: 3 },
+                events: {
+                    onReady: (e) => {
+                        try {
+                            const dur = e.target.getDuration();
+                            if (dur && dur > 0) {
+                                currentVideo.duration = dur;
+                                dbPut(STORE_META, currentVideo);
+                            }
+                            if (meta.position > 0 && !meta.completed) {
+                                e.target.seekTo(meta.position, true);
+                            } else if (meta.completed) {
+                                e.target.seekTo(0, true);
+                            }
+                        } catch (err) {}
+                    },
+                    onStateChange: (e) => {
+                        const state = e.data;
+                        if (state === YT.PlayerState.PLAYING) {
+                            if (saveTimer) clearInterval(saveTimer);
+                            saveTimer = setInterval(saveYouTubePosition, SAVE_INTERVAL_MS);
+                        } else if (state === YT.PlayerState.PAUSED) {
+                            saveYouTubePosition();
+                            if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+                        } else if (state === YT.PlayerState.ENDED) {
+                            if (currentVideo) {
+                                currentVideo.position = currentVideo.duration || 0;
+                                currentVideo.completed = true;
+                                currentVideo.watchCount = (currentVideo.watchCount || 0) + 1;
+                                currentVideo.lastWatched = Date.now();
+                                dbPut(STORE_META, currentVideo);
+                            }
+                            if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
+                        }
+                    },
+                    onError: (e) => {
+                        showToast('Could not load video. It may be private or unavailable.');
+                    }
+                }
+            });
+        }
+
+        async function saveYouTubePosition() {
+            if (!currentVideo || !ytPlayer) return;
+            try {
+                const t = ytPlayer.getCurrentTime();
+                const d = ytPlayer.getDuration();
+                if (!isFinite(t) || !isFinite(d) || d === 0) return;
+                currentVideo.position = t;
+                currentVideo.duration = d;
+                currentVideo.lastWatched = Date.now();
+                currentVideo.completed = t >= d - 1;
+                const pct = Math.round((t / d) * 100);
+                document.getElementById('saveStatus').textContent = `${formatTime(t)} / ${formatTime(d)} • ${pct}%`;
+                await dbPut(STORE_META, currentVideo);
+            } catch (e) {}
+        }
+
+        // ============== PLAYBACK (router) ==============
         async function playVideo(id) {
-            if (editingId) return; // Don't play while editing
+            if (editingId) return;
             const meta = await dbGet(STORE_META, id);
             if (!meta) { showToast('Video not found'); return; }
-            const record = await dbGet(STORE_VIDEOS, id);
-            if (!record || !record.blob) { showToast('Video file missing'); return; }
 
-            currentVideo = meta;
-            if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
-            currentObjectURL = URL.createObjectURL(record.blob);
-            video.src = currentObjectURL;
+            if (meta.type === 'youtube') {
+                document.getElementById('libraryView').classList.add('hidden');
+                document.getElementById('playerView').classList.add('active');
+                document.getElementById('playerTitle').textContent = getTitle(meta);
+                showResumeBanner(meta);
+                await playYouTubeVideo(meta);
+            } else {
+                const record = await dbGet(STORE_VIDEOS, id);
+                if (!record || !record.blob) { showToast('Video file missing'); return; }
+                currentVideo = meta;
+                if (currentObjectURL) URL.revokeObjectURL(currentObjectURL);
+                currentObjectURL = URL.createObjectURL(record.blob);
 
-            document.getElementById('libraryView').classList.add('hidden');
-            document.getElementById('playerView').classList.add('active');
-            document.getElementById('playerTitle').textContent = getTitle(meta);
+                // Show local, hide YT
+                video.style.display = '';
+                document.getElementById('ytPlayerContainer').classList.remove('active');
 
+                video.src = currentObjectURL;
+                document.getElementById('libraryView').classList.add('hidden');
+                document.getElementById('playerView').classList.add('active');
+                document.getElementById('playerTitle').textContent = getTitle(meta);
+                showResumeBanner(meta);
+            }
+        }
+
+        function showResumeBanner(meta) {
             const banner = document.getElementById('resumeBanner');
             if (meta.position > 0 && !meta.completed) {
                 banner.textContent = `Resuming from ${formatTime(meta.position)}`;
@@ -490,8 +614,9 @@
             }
         }
 
+        // Local video events
         video.addEventListener('loadedmetadata', async () => {
-            if (!currentVideo) return;
+            if (!currentVideo || currentVideo.type === 'youtube') return;
             if (!currentVideo.duration || currentVideo.duration === 0) {
                 currentVideo.duration = video.duration;
                 await dbPut(STORE_META, currentVideo);
@@ -503,27 +628,24 @@
                 video.currentTime = 0;
             }
         });
-
         video.addEventListener('timeupdate', () => {
-            if (currentVideo && video.duration) {
+            if (currentVideo && currentVideo.type !== 'youtube' && video.duration) {
                 const pct = Math.round((video.currentTime / video.duration) * 100);
-                document.getElementById('saveStatus').textContent =
-                    `${formatTime(video.currentTime)} / ${formatTime(video.duration)} • ${pct}%`;
+                document.getElementById('saveStatus').textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration)} • ${pct}%`;
             }
         });
-
         video.addEventListener('play', () => {
+            if (!currentVideo || currentVideo.type === 'youtube') return;
             if (saveTimer) clearInterval(saveTimer);
-            saveTimer = setInterval(savePosition, SAVE_INTERVAL_MS);
+            saveTimer = setInterval(saveLocalPosition, SAVE_INTERVAL_MS);
         });
-
         video.addEventListener('pause', () => {
-            savePosition();
+            if (!currentVideo || currentVideo.type === 'youtube') return;
+            saveLocalPosition();
             if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
         });
-
         video.addEventListener('ended', async () => {
-            if (!currentVideo) return;
+            if (!currentVideo || currentVideo.type === 'youtube') return;
             currentVideo.position = currentVideo.duration;
             currentVideo.completed = true;
             currentVideo.watchCount = (currentVideo.watchCount || 0) + 1;
@@ -532,26 +654,37 @@
             if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
         });
 
-        async function savePosition() {
-            if (!currentVideo || !video.duration) return;
+        async function saveLocalPosition() {
+            if (!currentVideo || currentVideo.type === 'youtube' || !video.duration) return;
             currentVideo.position = video.currentTime;
             currentVideo.lastWatched = Date.now();
             currentVideo.completed = video.currentTime >= video.duration - 1;
             try { await dbPut(STORE_META, currentVideo); } catch (e) {}
         }
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'hidden') savePosition();
-        });
+        async function savePosition() {
+            if (!currentVideo) return;
+            if (currentVideo.type === 'youtube') await saveYouTubePosition();
+            else await saveLocalPosition();
+        }
+
+        document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') savePosition(); });
         window.addEventListener('pagehide', savePosition);
         window.addEventListener('beforeunload', savePosition);
 
         async function closeVideo() {
             await savePosition();
+            // Local cleanup
             video.pause();
             video.removeAttribute('src');
             video.load();
             if (currentObjectURL) { URL.revokeObjectURL(currentObjectURL); currentObjectURL = null; }
+            // YouTube cleanup
+            if (ytPlayer) { try { ytPlayer.destroy(); } catch(e) {} ytPlayer = null; }
+            document.getElementById('ytPlayerContainer').classList.remove('active');
+            document.getElementById('ytPlayerContainer').innerHTML = '<div id="ytPlayer"></div>';
+            video.style.display = '';
+
             currentVideo = null;
             if (saveTimer) { clearInterval(saveTimer); saveTimer = null; }
             document.getElementById('playerView').classList.remove('active');
@@ -559,36 +692,22 @@
             await renderLibrary();
         }
 
-        // ========== RENAME (inline edit) ==========
+        // ============== RENAME ==============
         async function startRename(id, ev) {
             if (ev) ev.stopPropagation();
             if (editingId) return;
             editingId = id;
-
             const meta = await dbGet(STORE_META, id);
             if (!meta) return;
-
             const item = document.querySelector(`[data-id="${cssEscape(id)}"]`);
             if (!item) return;
             const titleEl = item.querySelector('.video-item-title');
             if (!titleEl) return;
-
             const currentTitle = getTitle(meta);
             const input = document.createElement('input');
-            input.type = 'text';
-            input.className = 'rename-input';
-            input.value = currentTitle;
-            input.maxLength = 200;
-
-            // Replace title with input
+            input.type = 'text'; input.className = 'rename-input'; input.value = currentTitle; input.maxLength = 200;
             titleEl.replaceWith(input);
-
-            // Focus and select all text
-            setTimeout(() => {
-                input.focus();
-                input.select();
-            }, 50);
-
+            setTimeout(() => { input.focus(); input.select(); }, 50);
             let finished = false;
             const finishEdit = async (save) => {
                 if (finished) return;
@@ -596,58 +715,51 @@
                 const newName = input.value.trim();
                 if (save && newName && newName !== currentTitle) {
                     const fresh = await dbGet(STORE_META, id);
-                    if (fresh) {
-                        fresh.customName = newName;
-                        await dbPut(STORE_META, fresh);
-                        showToast('Renamed');
-                    }
+                    if (fresh) { fresh.customName = newName; await dbPut(STORE_META, fresh); showToast('Renamed'); }
                 }
                 editingId = null;
                 await renderLibrary();
             };
-
             input.addEventListener('blur', () => finishEdit(true));
             input.addEventListener('keydown', (e) => {
                 if (e.key === 'Enter') { e.preventDefault(); input.blur(); }
                 if (e.key === 'Escape') { finished = true; editingId = null; renderLibrary(); }
             });
-            // Prevent tap from bubbling to the card
             input.addEventListener('click', (e) => e.stopPropagation());
         }
 
-        // ========== LIBRARY RENDERING ==========
+        // ============== LIBRARY ==============
         async function renderLibrary() {
             const list = document.getElementById('libraryList');
             const subtitle = document.getElementById('subtitle');
             const banner = document.getElementById('infoBanner');
             const all = await dbGetAllMeta();
-
             const storage = await updateStorageInfo();
+
             let subtitleText = '';
             if (all.length === 0) {
                 subtitleText = 'No videos yet';
             } else {
-                const totalSize = all.reduce((s, v) => s + (v.size || 0), 0);
-                subtitleText = `${all.length} video${all.length !== 1 ? 's' : ''} • ${formatBytes(totalSize)} used`;
-                if (storage) subtitleText += ` of ${formatBytes(storage.quota)}`;
+                const localVideos = all.filter(v => v.type !== 'youtube');
+                const ytVideos = all.filter(v => v.type === 'youtube');
+                const totalSize = localVideos.reduce((s, v) => s + (v.size || 0), 0);
+                let parts = [`${all.length} video${all.length !== 1 ? 's' : ''}`];
+                if (localVideos.length) parts.push(`${formatBytes(totalSize)} used`);
+                if (ytVideos.length) parts.push(`${ytVideos.length} from YouTube`);
+                subtitleText = parts.join(' • ');
             }
             subtitle.textContent = subtitleText;
 
             if (all.length === 0) {
-                banner.innerHTML = `<div class="info-banner"><strong>Tap Import videos</strong> to pick files from your Files app. They will be copied into this app and stay available offline. No re-picking needed.</div>`;
+                banner.innerHTML = `<div class="info-banner"><strong>Two ways to add videos:</strong><br>📂 <strong>Import files</strong> — videos from your Files app, stored offline<br>▶ <strong>YouTube</strong> — paste a URL to stream with progress tracking</div>`;
             } else if (storage && storage.pct > 85) {
-                banner.innerHTML = `<div class="info-banner warn"><strong>Storage almost full.</strong> Remove some videos to free up space.</div>`;
+                banner.innerHTML = `<div class="info-banner warn"><strong>Storage almost full.</strong> Remove some imported videos to free space.</div>`;
             } else {
                 banner.innerHTML = '';
             }
 
             if (all.length === 0) {
-                list.innerHTML = `
-                    <div class="empty-state">
-                        <div class="empty-icon">🎬</div>
-                        <div class="empty-title">Your library is empty</div>
-                        <div class="empty-desc">Import videos from your Files app — they'll stay in this app and play instantly.</div>
-                    </div>`;
+                list.innerHTML = `<div class="empty-state"><div class="empty-icon">🎬</div><div class="empty-title">Your library is empty</div><div class="empty-desc">Import a file or paste a YouTube URL to start.</div></div>`;
                 return;
             }
 
@@ -657,26 +769,29 @@
             const finished = sorted.filter(v => v.completed);
 
             let html = '';
-            if (inProgress.length) { html += `<div class="section-title">Continue watching</div>` + inProgress.map(videoItemHtml).join(''); }
-            if (notStarted.length) { html += `<div class="section-title">Not started</div>` + notStarted.map(videoItemHtml).join(''); }
-            if (finished.length) { html += `<div class="section-title">Finished</div>` + finished.map(videoItemHtml).join(''); }
+            if (inProgress.length) html += `<div class="section-title">Continue watching</div>` + inProgress.map(videoItemHtml).join('');
+            if (notStarted.length) html += `<div class="section-title">Not started</div>` + notStarted.map(videoItemHtml).join('');
+            if (finished.length) html += `<div class="section-title">Finished</div>` + finished.map(videoItemHtml).join('');
             list.innerHTML = html;
         }
 
         function videoItemHtml(v) {
             const pct = v.duration > 0 ? Math.round((v.position / v.duration) * 100) : 0;
             const complete = v.completed;
+            const isYT = v.type === 'youtube';
+
             let statusText;
             if (complete) statusText = '✓ Finished';
-            else if (v.position === 0) statusText = `${formatBytes(v.size)}`;
+            else if (v.position === 0) statusText = isYT ? (v.author ? `YouTube • ${v.author}` : 'YouTube') : `${formatBytes(v.size)}`;
             else statusText = `${formatTime(v.position)} / ${formatTime(v.duration)} • ${pct}%`;
 
             const safeId = escapeAttr(v.id);
             const durationBadge = v.duration > 0 ? `<div class="thumb-duration">${formatTime(v.duration)}</div>` : '';
+            const ytBadge = isYT ? `<div class="yt-badge">YT</div>` : '';
 
             const thumbInner = v.thumbnail
-                ? `<img src="${v.thumbnail}" alt=""><div class="play-overlay"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>${durationBadge}`
-                : `<div class="no-thumb">🎬</div><div class="play-overlay"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>${durationBadge}`;
+                ? `<img src="${escapeAttrQuotes(v.thumbnail)}" alt="" loading="lazy"><div class="play-overlay"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>${ytBadge}${durationBadge}`
+                : `<div class="no-thumb">${isYT ? '▶' : '🎬'}</div><div class="play-overlay"><svg viewBox="0 0 24 24"><polygon points="8,5 19,12 8,19"/></svg></div>${ytBadge}${durationBadge}`;
 
             return `
                 <div class="video-item" data-id="${safeId}" onclick="playVideo('${safeId}')">
@@ -711,25 +826,27 @@
         async function deleteVideo(id) {
             const meta = await dbGet(STORE_META, id);
             if (!meta) return;
-            showDialog('Delete this video?',
-                `"${getTitle(meta)}" will be removed from this app and ${formatBytes(meta.size)} will be freed. Your original file in the Files app is not affected.`,
-                [
-                    { text: 'Cancel', type: 'cancel' },
-                    { text: 'Delete', type: 'danger', action: async () => {
-                        await dbDelete(STORE_VIDEOS, id);
-                        await dbDelete(STORE_META, id);
-                        await renderLibrary();
-                        showToast('Video deleted');
-                    }}
-                ]);
+            const isYT = meta.type === 'youtube';
+            const desc = isYT
+                ? `"${getTitle(meta)}" will be removed from your library. The video remains on YouTube.`
+                : `"${getTitle(meta)}" will be removed from this app and ${formatBytes(meta.size)} will be freed. Your original file is not affected.`;
+            showDialog('Delete this video?', desc, [
+                { text: 'Cancel', type: 'cancel' },
+                { text: 'Delete', type: 'danger', action: async () => {
+                    if (!isYT) await dbDelete(STORE_VIDEOS, id);
+                    await dbDelete(STORE_META, id);
+                    await renderLibrary();
+                    showToast('Video deleted');
+                }}
+            ]);
         }
 
-        // ========== HELPERS ==========
+        // ============== HELPERS ==============
         function getTitle(meta) {
             if (meta.customName && meta.customName.trim()) return meta.customName;
-            return meta.name.replace(/\.[^/.]+$/, '');
+            if (meta.type === 'youtube') return meta.name || `YouTube video`;
+            return (meta.name || '').replace(/\.[^/.]+$/, '');
         }
-
         function formatTime(seconds) {
             if (!seconds || !isFinite(seconds)) return '0:00';
             const h = Math.floor(seconds / 3600);
@@ -740,17 +857,14 @@
         }
         function formatBytes(bytes) {
             if (!bytes) return '0 B';
-            const units = ['B', 'KB', 'MB', 'GB'];
-            let i = 0, n = bytes;
+            const units = ['B', 'KB', 'MB', 'GB']; let i = 0, n = bytes;
             while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
             return `${n.toFixed(n < 10 && i > 0 ? 1 : 0)} ${units[i]}`;
         }
-        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text == null ? '' : text; return div.innerHTML; }
         function escapeAttr(text) { return String(text).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
-        function cssEscape(text) {
-            if (window.CSS && CSS.escape) return CSS.escape(text);
-            return String(text).replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c);
-        }
+        function escapeAttrQuotes(text) { return String(text).replace(/"/g, '&quot;'); }
+        function cssEscape(text) { if (window.CSS && CSS.escape) return CSS.escape(text); return String(text).replace(/[^a-zA-Z0-9_-]/g, (c) => '\\' + c); }
 
         function showToast(message) {
             const toast = document.getElementById('toast');
@@ -758,7 +872,6 @@
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 2500);
         }
-
         function showDialog(title, desc, buttons) {
             document.getElementById('dialogTitle').textContent = title;
             document.getElementById('dialogDesc').textContent = desc;
@@ -782,14 +895,9 @@
                 await renderLibrary();
                 if (navigator.storage && navigator.storage.persisted) {
                     const persisted = await navigator.storage.persisted();
-                    if (!persisted && navigator.storage.persist) {
-                        navigator.storage.persist().catch(() => {});
-                    }
+                    if (!persisted && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
                 }
-            } catch (e) {
-                console.error('Init error:', e);
-                showToast('Could not open storage');
-            }
+            } catch (e) { console.error('Init error:', e); showToast('Could not open storage'); }
         })();
     </script>
 </body>
